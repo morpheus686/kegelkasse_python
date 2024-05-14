@@ -1,45 +1,25 @@
-on:
-  push:
-    branches:
-      - main
+name: Build
+on: [push, pull_request]
 
 jobs:
-  build_apk:
+  # Build job. Builds app for Android with Buildozer
+  build-android:
+    name: Build for Android
     runs-on: ubuntu-latest
-    
+
     steps:
-      - name: Checkout code
+      - name: Checkout
         uses: actions/checkout@v2
-        
-      - name: Set up Python
-        uses: actions/setup-python@v2
+
+      - name: Build with Buildozer
+        uses: ArtemSBulgakov/buildozer-action@v1
+        id: buildozer
         with:
-          python-version: '3.x'
-          
-      - name: Create virtual environment 
-        run: python3 -m venv venv
-      
-      - name: Activate virtual environment 
-        run: source venv/bin/activate
-        
-      - name: Install buildozer and dependencies      
-        run: |
-          pip install --upgrade cython virtualenv
-          pip install buildozer
+          workdir: .
+          buildozer_version: stable
 
-      - name: Install distutils 
-        run: sudo apt-get update && sudo apt-get install python3-distutils
-
-      - name: Install Python development headers and libraries      
-        run: sudo apt-get update && sudo apt-get install python3-dev
-      
-      - name: Build APK with Buildozer
-        run: |          
-          # Run buildozer to generate the APK.
-          buildozer android debug
-
-      - name: Upload APK artifact 
-        uses: actions/upload-artifact@v2 
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v2
         with:
-          name: debug-apk 
-          path: ./*.apk
+          name: package
+          path: ${{ steps.buildozer.outputs.filename }}
