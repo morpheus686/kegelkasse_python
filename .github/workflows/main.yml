@@ -26,8 +26,8 @@ jobs:
           # Run buildozer to generate the APK.
           buildozer android debug
 
-      - name : Upload APK artifact 
-         uses : actions/upload-artifact@v2 
-         with :
-           name : debug-apk 
-           path : ./path/to/your/python/project/bin/*.apk 
+      - name: Upload APK artifact 
+        uses: actions/upload-artifact@v2 
+        with:
+          name: debug-apk 
+          path: ./path/to/your/python/project/bin/*.apk
