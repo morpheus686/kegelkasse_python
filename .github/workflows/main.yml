@@ -20,9 +20,12 @@ jobs:
         run: |
           pip install --upgrade cython virtualenv
           pip install buildozer
+
+      - name: Install Python development headers and libraries      
+        run: sudo apt-get update && sudo apt-get install python3-dev
       
       - name: Build APK with Buildozer
-        run : |          
+        run: |          
           # Run buildozer to generate the APK.
           buildozer android debug
 
@@ -30,4 +33,4 @@ jobs:
         uses: actions/upload-artifact@v2 
         with:
           name: debug-apk 
-          path: ./path/to/your/python/project/bin/*.apk
+          path: ./*.apk
