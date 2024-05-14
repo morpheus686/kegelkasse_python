@@ -16,16 +16,19 @@ jobs:
         with:
           python-version: '3.x'
           
-      - name : Create virtual environment 
-        run : python3 -m venv venv
+      - name: Create virtual environment 
+        run: python3 -m venv venv
       
-      - name : Activate virtual environment 
-        run : source venv/bin/activate
+      - name: Activate virtual environment 
+        run: source venv/bin/activate
         
-      - name : Install buildozer and dependencies      
-        run : |
+      - name: Install buildozer and dependencies      
+        run: |
           pip install --upgrade cython virtualenv
           pip install buildozer
+
+      - name: Install distutils 
+        run: sudo apt-get update && sudo apt-get install python3-distutils
 
       - name: Install Python development headers and libraries      
         run: sudo apt-get update && sudo apt-get install python3-dev
