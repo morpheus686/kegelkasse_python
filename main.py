@@ -1,23 +1,28 @@
-import kivy
-from kivy.app import App
-from kivy.uix.boxlayout import BoxLayout
-
-import random
-
-kivy.require('1.10.1')
+from kivymd.app import MDApp
+from kivymd.uix.button import MDButton
+from kivymd.uix.screen import MDScreen
+from kivymd.uix.label import MDLabel, MDIcon
+from kivymd.uix.textfield import MDTextField
 
 
-class MyRoot(BoxLayout):
-    def __init__(self):
-        super(MyRoot, self).__init__()
-
-    def generate_number(self):
-        self.random_label.text = str(random.randint(0, 1000))
-
-
-class NeuralRandom(App):
+class TestApp(MDApp):
     def build(self):
-        return MyRoot()
+        self.theme_cls.primary_palette = "Blue"
+
+        screen = MDScreen()
+
+        label = MDLabel(text="Huhu")
+        screen.add_widget(label)
+        btn_flat = MDButton()
+        screen.add_widget(btn_flat)
+        icon_label = MDIcon(icon="language-python")
+        icon_label.icon_color = "red"
+        screen.add_widget(icon_label)
+        textfield = MDTextField("Enter user")
+        screen.add_widget(textfield)
+
+        return screen
 
 
-NeuralRandom().run()
+if __name__ == '__main__':
+    TestApp().run()

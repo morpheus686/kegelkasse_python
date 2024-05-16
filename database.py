@@ -2,9 +2,9 @@ import sqlite3
 from view_data_classes import *
 
 
-class DatabaseAccess:
-    def __init__(self):
-        self._connection: sqlite3.Connection = sqlite3.connect('strafenkatalog.db')
+class Database:
+    def __init__(self, db_name: str):
+        self._connection: sqlite3.Connection = sqlite3.connect(db_name)
 
     def execute_query(self, sql: str, params: tuple = ()):
         cursor = self._connection.cursor()
@@ -16,9 +16,9 @@ class DatabaseAccess:
         self._connection.commit()
 
 
-database = DatabaseAccess()
-result = database.execute_query("SELECT * FROM SumPerPlayer")
+if __name__ == "__main__":
+    database = Database('strafenkatalog.db')
+    result = database.execute_query("SELECT * FROM SumPerPlayer")
 
-player_list = [SumPerPlayer(date=row[0], team=row[1], player_name=row[2], penalty=row[3]) for row in result]
-print(player_list)
-
+    player_list = [SumPerPlayer(date=row[0], team=row[1], player_name=row[2], penalty=row[3]) for row in result]
+    print(player_list)
