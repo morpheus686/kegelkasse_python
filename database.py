@@ -1,5 +1,5 @@
 import sqlite3
-from data_classes import SumPerPlayer
+from view_data_classes import *
 
 
 class DatabaseAccess:
