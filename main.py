@@ -1,28 +1,22 @@
-from kivymd.app import MDApp
-from kivymd.uix.button import MDButton
-from kivymd.uix.screen import MDScreen
-from kivymd.uix.label import MDLabel, MDIcon
-from kivymd.uix.textfield import MDTextField
-
-
-class TestApp(MDApp):
-    def build(self):
-        self.theme_cls.primary_palette = "Blue"
-
-        screen = MDScreen()
-
-        label = MDLabel(text="Huhu")
-        screen.add_widget(label)
-        btn_flat = MDButton()
-        screen.add_widget(btn_flat)
-        icon_label = MDIcon(icon="language-python")
-        icon_label.icon_color = "red"
-        screen.add_widget(icon_label)
-        textfield = MDTextField("Enter user")
-        screen.add_widget(textfield)
-
-        return screen
+import sys
+from pathlib import Path
+from PySide6.QtCore import QUrl
+from PySide6.QtGui import QGuiApplication
+from PySide6.QtQuick import QQuickView
 
 
 if __name__ == '__main__':
-    TestApp().run()
+    app = QGuiApplication(sys.argv)
+    view = QQuickView()
+
+    qml_file = Path(__file__).parent / "view.qml"
+    absolute =  qml_file.resolve().absolute()
+    view.setSource(QUrl.fromLocalFile(absolute))
+
+    errors = view.errors()
+
+    for error in errors:
+        print(error)
+
+    view.show()
+    app.exec()
