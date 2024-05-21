@@ -7,10 +7,16 @@ ApplicationWindow {
     height: 1000
     visible: true
 
+
     Drawer {
         id: drawer
         width: 0.66 * window.width
         height: window.height
+        visible: true
+        modal: false
+        Label {
+            text: "Drawer"
+        }
     }
 
     Label {
