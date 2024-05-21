@@ -85,6 +85,12 @@ class SumPerTeamViewAccess(AbstractDatabaseAccess[SumPerTeam]):
         return [SumPerTeam(team_name=row[0], penalty_sum=row[1]) for row in r]
 
 
+class SumPerPlayerViewAccess(AbstractDatabaseAccess[SumPerPlayer]):
+    def get_all(self) -> list[SumPerPlayer]:
+        r = self._database.execute_query("SELECT * FROM SumPerPlayer")
+        return [SumPerPlayer(date=row[0], team=row[1], player_name=row[2], penalty=row[3]) for row in r]
+
+
 if __name__ == "__main__":
     database_access = Database('strafenkatalog.db')
     tableManager = DefaultTeamPlayerTableAccess(database_access)
