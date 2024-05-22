@@ -7,29 +7,9 @@ ApplicationWindow {
     height: 1000
     visible: true
 
-
-    Drawer {
-        id: drawer
-        width: 0.66 * window.width
-        height: window.height
-        visible: true
-        modal: false
-        Label {
-            text: "Drawer"
-        }
-    }
-
-    Label {
-        id: content
-
-        text: "Aa"
-        font.pixelSize: 96
+    TableView {
+        id: penaltytable
         anchors.fill: parent
-        verticalAlignment: Label.AlignVCenter
-        horizontalAlignment: Label.AlignHCenter
-
-        transform: Translate {
-            x: drawer.position * content.width * 0.33
-        }
+        alternatingRows: true
     }
 }
