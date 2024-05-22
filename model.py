@@ -17,36 +17,33 @@ class MainWindowModel:
 
     def get_all_player_penalties(self):
         self._penaltyTableModel.load()
-        return self.viewAccess.get_all()
+        return self.viewAccess.get_all_tuples()
 
 
 class PenaltyTableModel(QAbstractTableModel):
     def __init__(self, sum_per_player_db_access: SumPerPlayerViewAccess):
         super().__init__()
         self._sum_per_player_db_access = sum_per_player_db_access
-        self._players = []
+        self._players: list[tuple] = []
 
     def load(self):
-        self._players = self._sum_per_player_db_access.get_all()
+        self._players = self._sum_per_player_db_access.get_all_tuples()
 
     def rowCount(self, parent=QModelIndex()) -> int:
         return len(self._players)
 
     def columnCount(self, parent=QModelIndex()) -> int:
-        return 4
+        return len(self._players[0])
 
     def data(self, index: Union[QModelIndex, QPersistentModelIndex], role: int) -> Any:
         player = self._players[index.row()]
+        column_index = index.column()
 
         if role == Qt.ItemDataRole.DisplayRole:
-            if index.column() == 0:
-                return player.date
-            elif index.column() == 1:
-                return player.player_name
-            elif index.column() == 2:
-                return player.team
-            elif index.column() == 3:
-                return f"{player.penalty:.2f} €"
+            if column_index == 3:
+                return f"{player[column_index]:.2f} €"
+            else:
+                return player[column_index]
 
         return "Leer"
 

@@ -16,6 +16,9 @@ class AbstractDatabaseAccess(abc.ABC, Generic[T]):
     def get_all(self) -> list[T]:
         pass
 
+    def get_all_tuples(self) -> list[tuple]:
+        pass
+
 
 class AbstractTableAccess(AbstractDatabaseAccess, Generic[T]):
     @abc.abstractmethod
@@ -88,7 +91,13 @@ class SumPerTeamViewAccess(AbstractDatabaseAccess[SumPerTeam]):
 class SumPerPlayerViewAccess(AbstractDatabaseAccess[SumPerPlayer]):
     def get_all(self) -> list[SumPerPlayer]:
         r = self._database.execute_query("SELECT * FROM SumPerPlayer")
-        return [SumPerPlayer(date=row[0], team=row[1], player_name=row[2], penalty=row[3]) for row in r]
+        return [SumPerPlayer(game_id=row[0], date=row[1], team_name=row[2],
+                             player_id=row[3], player_name=row[4], penalty_sum=row[5],
+                             full=row[6], clear=row[7], errors=row[8],
+                             played=row[9]) for row in r]
+
+    def get_all_tuples(self) -> list[tuple]:
+        return self._database.execute_query("SELECT * FROM SumPerPlayer")
 
 
 if __name__ == "__main__":

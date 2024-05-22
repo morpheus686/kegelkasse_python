@@ -3,10 +3,16 @@ from dataclasses import dataclass
 
 @dataclass
 class SumPerPlayer:
+    game_id: int
     date: str
-    team: str
+    team_name: str
+    player_id: int
     player_name: str
-    penalty: float
+    penalty_sum: float
+    full: int
+    clear: int
+    errors: int
+    played: int
 
 
 @dataclass
