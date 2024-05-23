@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 ################################################################################
-## Form generated from reading UI file 'mainmtBWef.ui'
+## Form generated from reading UI file 'mainWWIDIh.ui'
 ##
 ## Created by: Qt User Interface Compiler version 6.7.0
 ##
@@ -9,40 +9,41 @@
 ################################################################################
 
 from PySide6.QtCore import (QCoreApplication, QDate, QDateTime, QLocale,
-                            QMetaObject, QObject, QPoint, QRect,
-                            QSize, QTime, QUrl, Qt)
-from PySide6.QtGui import (QBrush, QColor, QConicalGradient, QCursor,
-                           QFont, QFontDatabase, QGradient, QIcon,
-                           QImage, QKeySequence, QLinearGradient, QPainter,
-                           QPalette, QPixmap, QRadialGradient, QTransform)
-from PySide6.QtWidgets import (QApplication, QHBoxLayout, QHeaderView, QLabel,
-                               QMainWindow, QPushButton, QSizePolicy, QSpacerItem,
-                               QStatusBar, QTableView, QVBoxLayout, QWidget)
+    QMetaObject, QObject, QPoint, QRect,
+    QSize, QTime, QUrl, Qt)
+from PySide6.QtGui import (QAction, QBrush, QColor, QConicalGradient,
+    QCursor, QFont, QFontDatabase, QGradient,
+    QIcon, QImage, QKeySequence, QLinearGradient,
+    QPainter, QPalette, QPixmap, QRadialGradient,
+    QTransform)
+from PySide6.QtWidgets import (QApplication, QGridLayout, QHBoxLayout, QHeaderView,
+    QLabel, QMainWindow, QMenu, QMenuBar,
+    QPushButton, QSizePolicy, QSpacerItem, QStatusBar,
+    QTableView, QVBoxLayout, QWidget)
 
-
-class Ui_MainWindow:
+class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         if not MainWindow.objectName():
             MainWindow.setObjectName(u"MainWindow")
-        MainWindow.resize(800, 600)
+        MainWindow.resize(1109, 603)
+        self.actionMannschaften_verwalten = QAction(MainWindow)
+        self.actionMannschaften_verwalten.setObjectName(u"actionMannschaften_verwalten")
         self.centralwidget = QWidget(MainWindow)
         self.centralwidget.setObjectName(u"centralwidget")
-        self.verticalLayoutWidget = QWidget(self.centralwidget)
-        self.verticalLayoutWidget.setObjectName(u"verticalLayoutWidget")
-        self.verticalLayoutWidget.setGeometry(QRect(9, 9, 781, 551))
-        self.verticalLayout = QVBoxLayout(self.verticalLayoutWidget)
+        self.gridLayout = QGridLayout(self.centralwidget)
+        self.gridLayout.setObjectName(u"gridLayout")
+        self.verticalLayout = QVBoxLayout()
         self.verticalLayout.setObjectName(u"verticalLayout")
-        self.verticalLayout.setContentsMargins(0, 0, 0, 0)
         self.horizontalLayout = QHBoxLayout()
         self.horizontalLayout.setObjectName(u"horizontalLayout")
-        self.pushButton_2 = QPushButton(self.verticalLayoutWidget)
+        self.pushButton_2 = QPushButton(self.centralwidget)
         self.pushButton_2.setObjectName(u"pushButton_2")
         icon = QIcon(QIcon.fromTheme(u"go-previous"))
         self.pushButton_2.setIcon(icon)
 
         self.horizontalLayout.addWidget(self.pushButton_2)
 
-        self.label = QLabel(self.verticalLayoutWidget)
+        self.label = QLabel(self.centralwidget)
         self.label.setObjectName(u"label")
         font = QFont()
         font.setPointSize(20)
@@ -50,7 +51,7 @@ class Ui_MainWindow:
 
         self.horizontalLayout.addWidget(self.label)
 
-        self.pushButton = QPushButton(self.verticalLayoutWidget)
+        self.pushButton = QPushButton(self.centralwidget)
         self.pushButton.setObjectName(u"pushButton")
         icon1 = QIcon(QIcon.fromTheme(u"go-next"))
         self.pushButton.setIcon(icon1)
@@ -61,18 +62,31 @@ class Ui_MainWindow:
 
         self.horizontalLayout.addItem(self.horizontalSpacer)
 
+
         self.verticalLayout.addLayout(self.horizontalLayout)
 
-        self.tableView = QTableView(self.verticalLayoutWidget)
+        self.tableView = QTableView(self.centralwidget)
         self.tableView.setObjectName(u"tableView")
         self.tableView.setFont(font)
 
         self.verticalLayout.addWidget(self.tableView)
 
+
+        self.gridLayout.addLayout(self.verticalLayout, 0, 0, 1, 1)
+
         MainWindow.setCentralWidget(self.centralwidget)
         self.statusbar = QStatusBar(MainWindow)
         self.statusbar.setObjectName(u"statusbar")
         MainWindow.setStatusBar(self.statusbar)
+        self.menuBar = QMenuBar(MainWindow)
+        self.menuBar.setObjectName(u"menuBar")
+        self.menuBar.setGeometry(QRect(0, 0, 1109, 22))
+        self.menuEinstellungen = QMenu(self.menuBar)
+        self.menuEinstellungen.setObjectName(u"menuEinstellungen")
+        MainWindow.setMenuBar(self.menuBar)
+
+        self.menuBar.addAction(self.menuEinstellungen.menuAction())
+        self.menuEinstellungen.addAction(self.actionMannschaften_verwalten)
 
         self.retranslateUi(MainWindow)
 
@@ -81,7 +95,10 @@ class Ui_MainWindow:
 
     def retranslateUi(self, MainWindow):
         MainWindow.setWindowTitle(QCoreApplication.translate("MainWindow", u"Kegel-Strafenkatalog", None))
+        self.actionMannschaften_verwalten.setText(QCoreApplication.translate("MainWindow", u"Mannschaften verwalten", None))
         self.pushButton_2.setText("")
         self.label.setText(QCoreApplication.translate("MainWindow", u"Spieltag vom xx.xx.xxxx", None))
         self.pushButton.setText("")
+        self.menuEinstellungen.setTitle(QCoreApplication.translate("MainWindow", u"Einstellungen", None))
     # retranslateUi
+

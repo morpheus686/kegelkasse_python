@@ -29,7 +29,7 @@ class AbstractTableAccess(AbstractDatabaseAccess, Generic[T]):
 class DefaultTeamPlayerTableAccess(AbstractTableAccess[DefaultTeamPlayer]):
     def get_all(self) -> list[DefaultTeamPlayer]:
         r = self._database.execute_query("SELECT * FROM DefaultTeamPlayer")
-        return [DefaultTeamPlayer(id=row[0], player=row[1], team=row[2] ) for row in r]
+        return [DefaultTeamPlayer(id=row[0], player=row[1], team=row[2]) for row in r]
 
 
 class GameTableAccess(AbstractTableAccess[Game]):
