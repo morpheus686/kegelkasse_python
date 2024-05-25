@@ -1,8 +1,9 @@
-from typing import Any, Union
+from typing import Any, Union, TypeVar, Generic
 from PySide6.QtCore import QAbstractTableModel, QModelIndex, QPersistentModelIndex
 from PySide6.QtGui import Qt
 from database import Database
-from database_access import SumPerPlayerViewAccess
+from database_access import SumPerPlayerViewAccess, GamePlayerTableAccess
+from table_data_classes import PlayerPenalties, GamePlayers
 from view_data_classes import SumPerPlayer
 
 
@@ -10,32 +11,76 @@ class MainWindowModel:
     def __init__(self, db_name: str):
         self.database = Database(db_name)
         self.viewAccess = SumPerPlayerViewAccess(self.database)
-        self._penaltyTableModel = PenaltyTableModel(self.viewAccess)
+        self.game_player_access = GamePlayerTableAccess(self.database)
+        self._penaltyTableModel = SumPerPlayerTablemodel()
 
     @property
-    def get_penalty_table_model(self):
+    def penalty_table_model(self):
         return self._penaltyTableModel
 
     def get_all_player_penalties(self):
         return self.viewAccess.get_all_tuples()
 
 
-class PenaltyTableModel(QAbstractTableModel):
+class EditPenaltyDialogModel:
+    def __init__(self, selected_player: SumPerPlayer, game_player: GamePlayers):
+        self.selected_player = selected_player
+        self.game_player = game_player
+
+
+T = TypeVar('T')
+
+
+class TableModel(QAbstractTableModel, Generic[T]):
+    def __init__(self):
+        super().__init__()
+        self._source: list[T] = []
+
+    def get(self, index: int) -> T:
+        return self._source[index]
+
+    def _insert_rows_internal(self, index, rows):
+        list_len = len(self._source)
+        row_count = len(rows)
+        end_row = list_len + row_count - 1
+        self.beginInsertRows(index, list_len, end_row)
+
+        for row in rows:
+            self._source.append(row)
+
+        self.endInsertRows()
+
+    def _remove_rows_internal(self, row, count):
+        end_row = row + count - 1
+        self.beginRemoveRows(QModelIndex(), row, end_row)
+
+        while end_row >= row:
+            if len(self._source) == 0:
+                break
+
+            self._source.pop(end_row)
+            end_row -= 1
+
+        self.endRemoveRows()
+
+    def remove_all_rows(self):
+        self.removeRows(0, len(self._source), QModelIndex())
+
+
+class SumPerPlayerTablemodel(TableModel[SumPerPlayer]):
     BUTTON_COLUMN_NUMBER = 8
 
-    def __init__(self, sum_per_player_db_access: SumPerPlayerViewAccess):
+    def __init__(self):
         super().__init__()
-        self._sum_per_player_db_access = sum_per_player_db_access
-        self._players: list[SumPerPlayer] = []
 
     def rowCount(self, parent=QModelIndex()) -> int:
-        return len(self._players)
+        return len(self._source)
 
     def columnCount(self, parent=QModelIndex()) -> int:
         return 9
 
     def data(self, index: Union[QModelIndex, QPersistentModelIndex], role: int = ...) -> Any:
-        player = self._players[index.row()]
+        player = self._source[index.row()]
         column_index = index.column()
 
         if role == Qt.ItemDataRole.DisplayRole:
@@ -87,28 +132,18 @@ class PenaltyTableModel(QAbstractTableModel):
         return None
 
     def removeRows(self, row, count, parent=...):
-        end_row = row + count - 1
-        self.beginRemoveRows(QModelIndex(), row, end_row)
-
-        while end_row >= row:
-            if len(self._players) == 0:
-                break
-
-            self._players.pop(end_row)
-            end_row -= 1
-
-        self.endRemoveRows()
+        self._remove_rows_internal(row, count)
 
     def insertRows(self, index, rows, parent=...):
-        list_len = len(self._players)
-        row_count = len(rows)
-        end_row = list_len + row_count - 1
-        self.beginInsertRows(index, list_len, end_row)
+        self._insert_rows_internal(index, rows)
 
-        for row in rows:
-            self._players.append(row)
 
-        self.endInsertRows()
+class PlayerPenaltiesTableModel(TableModel[PlayerPenalties]):
+    def __init__(self, penalties: list[PlayerPenalties]):
+        super().__init__()
 
-    def remove_all_rows(self):
-        self.removeRows(0, len(self._players), QModelIndex())
+    def insertRows(self, index, rows, parent=...):
+        self._insert_rows_internal(index, rows)
+
+    def removeRows(self, row, count, parent=...):
+        self._remove_rows_internal(row, count)

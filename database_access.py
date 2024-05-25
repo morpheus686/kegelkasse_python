@@ -38,10 +38,17 @@ class GameTableAccess(AbstractTableAccess[Game]):
         return [Game(id=row[0], team=row[1], date=row[2]) for row in r]
 
 
-class GamePlayersTableAccess(AbstractTableAccess[GamePlayers]):
+class GamePlayerTableAccess(AbstractTableAccess[GamePlayers]):
     def get_all(self) -> list[GamePlayers]:
         r = self._database.execute_query("SELECT * FROM GamePlayers")
         return [GamePlayers(id=row[0], game=row[1], player=row[2], paid=row[3]) for row in r]
+
+    def get_by_game_and_player(self, game_id: int, player_id: int) -> GamePlayers:
+        query = "SELECT * FROM GamePlayers WHERE Game = ? AND Player = ?"
+        params = (game_id, player_id)
+        r = self._database.execute_single_query(query, params)
+
+        return GamePlayers(id=r[0], game=r[1], player=r[2], paid=r[3])
 
 
 class PenaltyTableAccess(AbstractTableAccess[Penalty]):

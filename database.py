@@ -10,6 +10,10 @@ class Database:
         cursor = self._connection.cursor()
         return cursor.execute(sql, params).fetchall()
 
+    def execute_single_query(self, sql: str, params: tuple = ()):
+        cursor = self._connection.cursor()
+        return cursor.execute(sql, params).fetchone()
+
     def execute_command(self, sql: str, params: tuple = ()):
         cursor = self._connection.cursor()
         cursor.execute(sql, params)
