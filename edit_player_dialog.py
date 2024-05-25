@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 ################################################################################
-## Form generated from reading UI file 'EditPlayerPenaltyViewFqUiak.ui'
+## Form generated from reading UI file 'EditPlayerPenaltyViewYGuJlu.ui'
 ##
 ## Created by: Qt User Interface Compiler version 6.7.0
 ##
@@ -17,13 +17,13 @@ from PySide6.QtGui import (QBrush, QColor, QConicalGradient, QCursor,
     QPalette, QPixmap, QRadialGradient, QTransform)
 from PySide6.QtWidgets import (QAbstractButton, QApplication, QDialog, QDialogButtonBox,
     QGridLayout, QHeaderView, QLabel, QLineEdit,
-    QSizePolicy, QTableView, QWidget)
+    QSizePolicy, QSpinBox, QTableView, QWidget)
 
 class Ui_Dialog(object):
     def setupUi(self, Dialog):
         if not Dialog.objectName():
             Dialog.setObjectName(u"Dialog")
-        Dialog.resize(400, 198)
+        Dialog.resize(467, 186)
         self.gridLayout_2 = QGridLayout(Dialog)
         self.gridLayout_2.setObjectName(u"gridLayout_2")
         self.gridLayout = QGridLayout()
@@ -38,35 +38,39 @@ class Ui_Dialog(object):
 
         self.gridLayout.addWidget(self.label_4, 2, 0, 1, 1)
 
-        self.errorLineEdit = QLineEdit(Dialog)
-        self.errorLineEdit.setObjectName(u"errorLineEdit")
-
-        self.gridLayout.addWidget(self.errorLineEdit, 3, 1, 1, 1)
-
         self.label_5 = QLabel(Dialog)
         self.label_5.setObjectName(u"label_5")
 
         self.gridLayout.addWidget(self.label_5, 3, 0, 1, 1)
-
-        self.totalLineEdit = QLineEdit(Dialog)
-        self.totalLineEdit.setObjectName(u"totalLineEdit")
-
-        self.gridLayout.addWidget(self.totalLineEdit, 2, 1, 1, 1)
 
         self.label_2 = QLabel(Dialog)
         self.label_2.setObjectName(u"label_2")
 
         self.gridLayout.addWidget(self.label_2, 0, 0, 1, 1)
 
-        self.clearLineEdit = QLineEdit(Dialog)
-        self.clearLineEdit.setObjectName(u"clearLineEdit")
+        self.full_spin_box = QSpinBox(Dialog)
+        self.full_spin_box.setObjectName(u"full_spin_box")
+        self.full_spin_box.setMaximum(800)
 
-        self.gridLayout.addWidget(self.clearLineEdit, 1, 1, 1, 1)
+        self.gridLayout.addWidget(self.full_spin_box, 0, 1, 1, 1)
 
-        self.FullLineEdit = QLineEdit(Dialog)
-        self.FullLineEdit.setObjectName(u"FullLineEdit")
+        self.clear_spin_box = QSpinBox(Dialog)
+        self.clear_spin_box.setObjectName(u"clear_spin_box")
+        self.clear_spin_box.setMaximum(300)
 
-        self.gridLayout.addWidget(self.FullLineEdit, 0, 1, 1, 1)
+        self.gridLayout.addWidget(self.clear_spin_box, 1, 1, 1, 1)
+
+        self.error_spin_box = QSpinBox(Dialog)
+        self.error_spin_box.setObjectName(u"error_spin_box")
+        self.error_spin_box.setMaximum(120)
+
+        self.gridLayout.addWidget(self.error_spin_box, 3, 1, 1, 1)
+
+        self.total_line_edit = QLineEdit(Dialog)
+        self.total_line_edit.setObjectName(u"total_line_edit")
+        self.total_line_edit.setReadOnly(True)
+
+        self.gridLayout.addWidget(self.total_line_edit, 2, 1, 1, 1)
 
 
         self.gridLayout_2.addLayout(self.gridLayout, 0, 0, 1, 1)
@@ -80,6 +84,7 @@ class Ui_Dialog(object):
 
         self.penaltyTable = QTableView(Dialog)
         self.penaltyTable.setObjectName(u"penaltyTable")
+        self.penaltyTable.verticalHeader().setVisible(False)
 
         self.gridLayout_2.addWidget(self.penaltyTable, 0, 1, 1, 1)
 

@@ -16,9 +16,6 @@ class AbstractDatabaseAccess(abc.ABC, Generic[T]):
     def get_all(self) -> list[T]:
         pass
 
-    def get_all_tuples(self) -> list[tuple]:
-        pass
-
 
 class AbstractTableAccess(AbstractDatabaseAccess, Generic[T]):
     @abc.abstractmethod
@@ -41,14 +38,29 @@ class GameTableAccess(AbstractTableAccess[Game]):
 class GamePlayerTableAccess(AbstractTableAccess[GamePlayers]):
     def get_all(self) -> list[GamePlayers]:
         r = self._database.execute_query("SELECT * FROM GamePlayers")
-        return [GamePlayers(id=row[0], game=row[1], player=row[2], paid=row[3]) for row in r]
+        return [GamePlayers(id=r[0], game=r[1], player=r[2],
+                            paid=r[3], sum_points=r[4], full=r[5],
+                            clear=r[6], errors=r[7]) for row in r]
 
     def get_by_game_and_player(self, game_id: int, player_id: int) -> GamePlayers:
         query = "SELECT * FROM GamePlayers WHERE Game = ? AND Player = ?"
         params = (game_id, player_id)
         r = self._database.execute_single_query(query, params)
 
-        return GamePlayers(id=r[0], game=r[1], player=r[2], paid=r[3])
+        return GamePlayers(id=r[0], game=r[1], player=r[2],
+                           paid=r[3], sum_points=r[4], full=r[5],
+                           clear=r[6], errors=r[7])
+
+    def update(self, game_player: GamePlayers) -> None:
+        query = """UPDATE GamePlayers 
+                   SET Result = ?,
+                       Full = ?,
+                       Clear = ?,
+                       Errors = ?
+                   WHERE Id = ?"""
+
+        params = (game_player.sum_points, game_player.full, game_player.clear, game_player.errors, game_player.id)
+        self._database.execute_command(query, params)
 
 
 class PenaltyTableAccess(AbstractTableAccess[Penalty]):
@@ -56,7 +68,17 @@ class PenaltyTableAccess(AbstractTableAccess[Penalty]):
         r = self._database.execute_query("SELECT * FROM Penalty")
         return [Penalty(id=row[0], description=row[1],
                         type=row[2], penalty=row[3],
-                        lower_limit=row[4], upper_limit=row[5]) for row in r]
+                        lower_limit=row[4], upper_limit=row[5],
+                        ) for row in r]
+
+    def get_by_id(self, id: int) -> Penalty:
+        query = "SELECT * FROM Penalty WHERE Id = ?"
+        params = (id,)
+        r = self._database.execute_single_query(query, params)
+
+        return Penalty(id=r[0], description=r[1],
+                       type=r[2], penalty=r[3],
+                       lower_limit=r[4], upper_limit=r[5])
 
 
 class PenaltyKindTableAccess(AbstractTableAccess[PenaltyKind]):
@@ -75,6 +97,21 @@ class PlayerPenaltiesTableAccess(AbstractTableAccess[PlayerPenalties]):
     def get_all(self) -> list[PlayerPenalties]:
         r = self._database.execute_query("SELECT * FROM PlayerPenalties")
         return [PlayerPenalties(id=row[0], game_player=row[1], penalty=row[2], value=row[3]) for row in r]
+
+    def get_by_gameplayerid(self, gameplayerid: int) -> list[PlayerPenalties]:
+        query = "SELECT * FROM PlayerPenalties WHERE GamePlayer = ?"
+        params = (gameplayerid,)
+        r = self._database.execute_query(query, params)
+
+        return [PlayerPenalties(id=row[0], game_player=row[1], penalty=row[2], value=row[3]) for row in r]
+
+    def update(self, player_penalty: PlayerPenalties):
+        query = """UPDATE PlayerPenalties 
+                   SET Value = ?
+                   WHERE Id = ?"""
+
+        params = (player_penalty.value, player_penalty.id)
+        self._database.execute_command(query, params)
 
 
 class TeamTableAccess(AbstractTableAccess[Team]):
@@ -103,8 +140,15 @@ class SumPerPlayerViewAccess(AbstractDatabaseAccess[SumPerPlayer]):
                              full=row[6], clear=row[7], errors=row[8],
                              played=row[9]) for row in r]
 
-    def get_all_tuples(self) -> list[tuple]:
-        return self._database.execute_query("SELECT * FROM SumPerPlayer")
+    def get_by_game_id(self, game_id: int):
+        query = "SELECT * FROM SumPerPlayer WHERE GameId = ?"
+        params = (game_id,)
+
+        r = self._database.execute_query(query, params)
+        return [SumPerPlayer(game_id=row[0], date=row[1], team_name=row[2],
+                             player_id=row[3], player_name=row[4], penalty_sum=row[5],
+                             full=row[6], clear=row[7], errors=row[8],
+                             played=row[9]) for row in r]
 
 
 if __name__ == "__main__":

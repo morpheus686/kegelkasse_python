@@ -27,7 +27,7 @@ if __name__ == '__main__':
         ui = Ui_MainWindow()
         ui.setupUi(window)
         controller = MainWindowController(MainWindowModel('strafenkatalog.db'), ui)
-        controller.load_table_view()
+        controller.initialize()
         window.show()
         apply_stylesheet(app, "light_blue.xml", invert_secondary=True)
         app.exec()

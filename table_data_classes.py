@@ -16,14 +16,6 @@ class Game:
 
 
 @dataclass
-class GamePlayers:
-    id: int
-    game: int
-    player: int
-    paid: float
-
-
-@dataclass
 class Penalty:
     id: int
     description: str
@@ -51,6 +43,7 @@ class PlayerPenalties:
     game_player: int
     penalty: int
     value: int
+    penalty_navigation: Penalty = None
 
 
 @dataclass
@@ -64,3 +57,16 @@ class TeamPenalties:
     id: int
     team: int
     penalty: int
+
+
+@dataclass
+class GamePlayers:
+    id: int
+    game: int
+    player: int
+    paid: float
+    full: int
+    clear: int
+    sum_points: int
+    errors: int
+    player_penalties_navigation: list[PlayerPenalties] = None

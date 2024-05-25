@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 ################################################################################
-## Form generated from reading UI file 'mainWWIDIh.ui'
+## Form generated from reading UI file 'mainKypWbc.ui'
 ##
 ## Created by: Qt User Interface Compiler version 6.7.0
 ##
@@ -36,27 +36,27 @@ class Ui_MainWindow(object):
         self.verticalLayout.setObjectName(u"verticalLayout")
         self.horizontalLayout = QHBoxLayout()
         self.horizontalLayout.setObjectName(u"horizontalLayout")
-        self.pushButton_2 = QPushButton(self.centralwidget)
-        self.pushButton_2.setObjectName(u"pushButton_2")
+        self.previous_push_button = QPushButton(self.centralwidget)
+        self.previous_push_button.setObjectName(u"previous_push_button")
         icon = QIcon(QIcon.fromTheme(u"go-previous"))
-        self.pushButton_2.setIcon(icon)
+        self.previous_push_button.setIcon(icon)
 
-        self.horizontalLayout.addWidget(self.pushButton_2)
+        self.horizontalLayout.addWidget(self.previous_push_button)
 
-        self.label = QLabel(self.centralwidget)
-        self.label.setObjectName(u"label")
+        self.game_day_label = QLabel(self.centralwidget)
+        self.game_day_label.setObjectName(u"game_day_label")
         font = QFont()
         font.setPointSize(20)
-        self.label.setFont(font)
+        self.game_day_label.setFont(font)
 
-        self.horizontalLayout.addWidget(self.label)
+        self.horizontalLayout.addWidget(self.game_day_label)
 
-        self.pushButton = QPushButton(self.centralwidget)
-        self.pushButton.setObjectName(u"pushButton")
+        self.next_push_button = QPushButton(self.centralwidget)
+        self.next_push_button.setObjectName(u"next_push_button")
         icon1 = QIcon(QIcon.fromTheme(u"go-next"))
-        self.pushButton.setIcon(icon1)
+        self.next_push_button.setIcon(icon1)
 
-        self.horizontalLayout.addWidget(self.pushButton)
+        self.horizontalLayout.addWidget(self.next_push_button)
 
         self.horizontalSpacer = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
 
@@ -96,9 +96,9 @@ class Ui_MainWindow(object):
     def retranslateUi(self, MainWindow):
         MainWindow.setWindowTitle(QCoreApplication.translate("MainWindow", u"Kegel-Strafenkatalog", None))
         self.actionMannschaften_verwalten.setText(QCoreApplication.translate("MainWindow", u"Mannschaften verwalten", None))
-        self.pushButton_2.setText("")
-        self.label.setText(QCoreApplication.translate("MainWindow", u"Spieltag vom xx.xx.xxxx", None))
-        self.pushButton.setText("")
+        self.previous_push_button.setText("")
+        self.game_day_label.setText(QCoreApplication.translate("MainWindow", u"Spieltag vom xx.xx.xxxx", None))
+        self.next_push_button.setText("")
         self.menuEinstellungen.setTitle(QCoreApplication.translate("MainWindow", u"Einstellungen", None))
     # retranslateUi
 

@@ -20,7 +20,7 @@
       <item>
        <layout class="QHBoxLayout" name="horizontalLayout">
         <item>
-         <widget class="QPushButton" name="pushButton_2">
+         <widget class="QPushButton" name="previous_push_button">
           <property name="text">
            <string/>
           </property>
@@ -30,7 +30,7 @@
          </widget>
         </item>
         <item>
-         <widget class="QLabel" name="label">
+         <widget class="QLabel" name="game_day_label">
           <property name="font">
            <font>
             <pointsize>20</pointsize>
@@ -42,7 +42,7 @@
          </widget>
         </item>
         <item>
-         <widget class="QPushButton" name="pushButton">
+         <widget class="QPushButton" name="next_push_button">
           <property name="text">
            <string/>
           </property>

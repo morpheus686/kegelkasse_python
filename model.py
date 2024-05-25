@@ -2,7 +2,8 @@ from typing import Any, Union, TypeVar, Generic
 from PySide6.QtCore import QAbstractTableModel, QModelIndex, QPersistentModelIndex
 from PySide6.QtGui import Qt
 from database import Database
-from database_access import SumPerPlayerViewAccess, GamePlayerTableAccess
+from database_access import SumPerPlayerViewAccess, GamePlayerTableAccess, PlayerPenaltiesTableAccess, \
+    PenaltyTableAccess, GameTableAccess
 from table_data_classes import PlayerPenalties, GamePlayers
 from view_data_classes import SumPerPlayer
 
@@ -10,16 +11,16 @@ from view_data_classes import SumPerPlayer
 class MainWindowModel:
     def __init__(self, db_name: str):
         self.database = Database(db_name)
-        self.viewAccess = SumPerPlayerViewAccess(self.database)
+        self.sum_per_player_view_access = SumPerPlayerViewAccess(self.database)
         self.game_player_access = GamePlayerTableAccess(self.database)
+        self.player_penalty_access = PlayerPenaltiesTableAccess(self.database)
+        self.penalty_access = PenaltyTableAccess(self.database)
+        self.game_access = GameTableAccess(self.database)
         self._penaltyTableModel = SumPerPlayerTablemodel()
 
     @property
     def penalty_table_model(self):
         return self._penaltyTableModel
-
-    def get_all_player_penalties(self):
-        return self.viewAccess.get_all_tuples()
 
 
 class EditPenaltyDialogModel:
@@ -39,7 +40,7 @@ class TableModel(QAbstractTableModel, Generic[T]):
     def get(self, index: int) -> T:
         return self._source[index]
 
-    def _insert_rows_internal(self, index, rows):
+    def insertRows(self, index, rows, parent=...):
         list_len = len(self._source)
         row_count = len(rows)
         end_row = list_len + row_count - 1
@@ -50,7 +51,7 @@ class TableModel(QAbstractTableModel, Generic[T]):
 
         self.endInsertRows()
 
-    def _remove_rows_internal(self, row, count):
+    def removeRows(self, row, count, parent=...):
         end_row = row + count - 1
         self.beginRemoveRows(QModelIndex(), row, end_row)
 
@@ -64,20 +65,18 @@ class TableModel(QAbstractTableModel, Generic[T]):
         self.endRemoveRows()
 
     def remove_all_rows(self):
-        self.removeRows(0, len(self._source), QModelIndex())
+        if self._source:
+            self.removeRows(0, len(self._source), QModelIndex())
+
+    def rowCount(self, parent=QModelIndex()) -> int:
+        return len(self._source)
 
 
 class SumPerPlayerTablemodel(TableModel[SumPerPlayer]):
     BUTTON_COLUMN_NUMBER = 8
 
-    def __init__(self):
-        super().__init__()
-
-    def rowCount(self, parent=QModelIndex()) -> int:
-        return len(self._source)
-
     def columnCount(self, parent=QModelIndex()) -> int:
-        return 9
+        return 8
 
     def data(self, index: Union[QModelIndex, QPersistentModelIndex], role: int = ...) -> Any:
         player = self._source[index.row()]
@@ -98,11 +97,13 @@ class SumPerPlayerTablemodel(TableModel[SumPerPlayer]):
                 case 5:
                     return player.errors
                 case 6:
-                    return player.played
+                    return ""
                 case 7:
                     return f"{player.penalty_sum:.2f} €"
                 case BUTTON_COLUMN_NUMBER:
                     return "Bearbeiten"
+        elif role == Qt.ItemDataRole.CheckStateRole and index.column() == 6:
+            return bool(player.played)
 
         return None
 
@@ -131,19 +132,61 @@ class SumPerPlayerTablemodel(TableModel[SumPerPlayer]):
 
         return None
 
-    def removeRows(self, row, count, parent=...):
-        self._remove_rows_internal(row, count)
+    def flags(self, index):
+        flags = super().flags(index)
 
-    def insertRows(self, index, rows, parent=...):
-        self._insert_rows_internal(index, rows)
+        if index.column() == 6:
+            flags = flags | Qt.ItemFlag.ItemIsUserCheckable
+
+        return flags
 
 
 class PlayerPenaltiesTableModel(TableModel[PlayerPenalties]):
-    def __init__(self, penalties: list[PlayerPenalties]):
-        super().__init__()
+    def columnCount(self, parent=...):
+        return 3
 
-    def insertRows(self, index, rows, parent=...):
-        self._insert_rows_internal(index, rows)
+    def headerData(self, section, orientation, role = ...):
+        if role == Qt.ItemDataRole.DisplayRole:
+            if orientation == Qt.Orientation.Horizontal:
+                match section:
+                    case 0:
+                        return "Regel"
+                    case 1:
+                        return "Anzahl"
+                    case 2:
+                        return "Summe"
+            elif orientation == Qt.Orientation.Vertical:
+                return section + 1
 
-    def removeRows(self, row, count, parent=...):
-        self._remove_rows_internal(row, count)
+    def data(self, index, role=...):
+        row = self._source[index.row()]
+        column_index = index.column()
+
+        if role == Qt.ItemDataRole.DisplayRole:
+            match column_index:
+                case 0:
+                    return row.penalty_navigation.description
+                case 1:
+                    return row.value
+                case 2:
+                    total = row.value * row.penalty_navigation.penalty
+                    return f"{total:.2f} €"
+
+        return None
+
+    def setData(self, index, value, role=...):
+        try:
+            if role == Qt.ItemDataRole.EditRole and index.column() == 1:
+                self._source[index.row()].value = int(value)
+
+            return True
+        except Exception:
+            return False
+
+    def flags(self, index):
+        flags = super().flags(index)
+
+        if index.column() == 1:
+            flags = flags | Qt.ItemFlag.ItemIsEditable
+
+        return flags
