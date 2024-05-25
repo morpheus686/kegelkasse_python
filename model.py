@@ -73,10 +73,10 @@ class TableModel(QAbstractTableModel, Generic[T]):
 
 
 class SumPerPlayerTablemodel(TableModel[SumPerPlayer]):
-    BUTTON_COLUMN_NUMBER = 8
+    BUTTON_COLUMN_NUMBER = 9
 
     def columnCount(self, parent=QModelIndex()) -> int:
-        return 8
+        return 9
 
     def data(self, index: Union[QModelIndex, QPersistentModelIndex], role: int = ...) -> Any:
         player = self._source[index.row()]
@@ -95,14 +95,14 @@ class SumPerPlayerTablemodel(TableModel[SumPerPlayer]):
                 case 4:
                     return player.clear
                 case 5:
-                    return player.errors
+                    return player.full + player.clear
                 case 6:
-                    return ""
+                    return player.errors
                 case 7:
+                    return ""
+                case 8:
                     return f"{player.penalty_sum:.2f} €"
-                case BUTTON_COLUMN_NUMBER:
-                    return "Bearbeiten"
-        elif role == Qt.ItemDataRole.CheckStateRole and index.column() == 6:
+        elif role == Qt.ItemDataRole.CheckStateRole and index.column() == 7:
             return bool(player.played)
 
         return None
@@ -122,10 +122,12 @@ class SumPerPlayerTablemodel(TableModel[SumPerPlayer]):
                     case 4:
                         return "Abräumen"
                     case 5:
-                        return "Fehler"
+                        return "Gesamt"
                     case 6:
-                        return "Gespielt"
+                        return "Fehler"
                     case 7:
+                        return "Gespielt"
+                    case 8:
                         return "Strafe"
             elif orientation == Qt.Orientation.Vertical:
                 return section + 1
@@ -135,7 +137,7 @@ class SumPerPlayerTablemodel(TableModel[SumPerPlayer]):
     def flags(self, index):
         flags = super().flags(index)
 
-        if index.column() == 6:
+        if index.column() == 7:
             flags = flags | Qt.ItemFlag.ItemIsUserCheckable
 
         return flags
@@ -176,8 +178,18 @@ class PlayerPenaltiesTableModel(TableModel[PlayerPenalties]):
 
     def setData(self, index, value, role=...):
         try:
+            new_value = int(value)
+            index_row = index.row()
+
             if role == Qt.ItemDataRole.EditRole and index.column() == 1:
-                self._source[index.row()].value = int(value)
+                self._source[index_row].value = new_value
+            elif role == Qt.ItemDataRole.DisplayRole:
+                new_value = int(value)
+                old_value = self._source[index_row].value
+                self._source[index_row].value = new_value
+
+                if old_value != new_value:
+                    self.dataChanged(index)
 
             return True
         except Exception:
@@ -187,6 +199,9 @@ class PlayerPenaltiesTableModel(TableModel[PlayerPenalties]):
         flags = super().flags(index)
 
         if index.column() == 1:
-            flags = flags | Qt.ItemFlag.ItemIsEditable
+            current_row = self._source[index.row()]
+
+            if current_row.penalty != 6:
+                flags = flags | Qt.ItemFlag.ItemIsEditable
 
         return flags

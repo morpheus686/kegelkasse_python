@@ -1,4 +1,4 @@
-from PySide6.QtCore import QModelIndex
+from PySide6.QtCore import QModelIndex, Qt
 from PySide6.QtWidgets import QDialog
 
 from delegates import SpinBoxDelegate
@@ -116,17 +116,17 @@ class EditPenaltyDialogController:
         self._view.full_spin_box.valueChanged.connect(self.full_value_changed)
         self._view.clear_spin_box.valueChanged.connect(self.clear_value_changed)
         self._view.error_spin_box.valueChanged.connect(self.error_value_changed)
-        delegate = SpinBoxDelegate()
-        self._view.penaltyTable.setItemDelegate(delegate)
+        spinbox_delegate = SpinBoxDelegate()
+        self._view.penaltyTable.setItemDelegate(spinbox_delegate)
+        self._table_model = PlayerPenaltiesTableModel()
 
     def load_dialog(self):
         self._view.full_spin_box.setValue(self._model.game_player.full)
         self._view.clear_spin_box.setValue(self._model.game_player.clear)
         self._view.error_spin_box.setValue(self._model.game_player.errors)
 
-        table_model = PlayerPenaltiesTableModel()
-        table_model.insertRows(QModelIndex(), self._model.game_player.player_penalties_navigation)
-        self._view.penaltyTable.setModel(table_model)
+        self._table_model.insertRows(QModelIndex(), self._model.game_player.player_penalties_navigation)
+        self._view.penaltyTable.setModel(self._table_model)
 
     def full_value_changed(self):
         self.set_total_line_edit()
@@ -142,3 +142,6 @@ class EditPenaltyDialogController:
 
     def error_value_changed(self):
         self._model.game_player.errors = self._view.error_spin_box.value()
+        index = self._table_model.index(0, 1, QModelIndex())
+        self._table_model.setData(index, self._view.error_spin_box.value(), Qt.ItemDataRole.DisplayRole)
+        self._view.penaltyTable.repaint()
