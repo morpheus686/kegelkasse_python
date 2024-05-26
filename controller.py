@@ -37,7 +37,8 @@ class MainWindowController:
         table_model = self.model.penalty_table_model
         table_model.remove_all_rows()
         sum_per_players = self.model.sum_per_player_view_access.get_by_game_id(self._currentGame.id)
-        table_model.insertRows(QModelIndex(), rows=sum_per_players)
+        insert_index = table_model.createIndex(0, 0, QModelIndex())
+        table_model.insertRows(insert_index, rows=sum_per_players, parent=QModelIndex())
 
     def previous_button_clicked(self):
         current_index = self.get_current_index_of_game()
@@ -125,7 +126,8 @@ class EditPenaltyDialogController:
         self._view.clear_spin_box.setValue(self._model.game_player.clear)
         self._view.error_spin_box.setValue(self._model.game_player.errors)
 
-        self._table_model.insertRows(QModelIndex(), self._model.game_player.player_penalties_navigation)
+        insert_index = self._table_model.createIndex(0, 0, QModelIndex())
+        self._table_model.insertRows(insert_index, self._model.game_player.player_penalties_navigation, QModelIndex())
         self._view.penaltyTable.setModel(self._table_model)
 
     def full_value_changed(self):
@@ -142,6 +144,7 @@ class EditPenaltyDialogController:
 
     def error_value_changed(self):
         self._model.game_player.errors = self._view.error_spin_box.value()
-        index = self._table_model.index(0, 1, QModelIndex())
+        error_row_index = self._table_model.get_rowindex_of_error_row()
+        index = self._table_model.index(error_row_index, 1, QModelIndex())
         self._table_model.setData(index, self._view.error_spin_box.value(), Qt.ItemDataRole.DisplayRole)
         self._view.penaltyTable.repaint()

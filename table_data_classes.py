@@ -23,6 +23,7 @@ class Penalty:
     penalty: float
     lower_limit: int
     upper_limit: int
+    get_value_by_parent: bool
 
 
 @dataclass

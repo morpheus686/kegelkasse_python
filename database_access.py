@@ -69,16 +69,17 @@ class PenaltyTableAccess(AbstractTableAccess[Penalty]):
         return [Penalty(id=row[0], description=row[1],
                         type=row[2], penalty=row[3],
                         lower_limit=row[4], upper_limit=row[5],
-                        ) for row in r]
+                        get_value_by_parent=row[6]) for row in r]
 
-    def get_by_id(self, id: int) -> Penalty:
+    def get_by_id(self, penalty_id: int) -> Penalty:
         query = "SELECT * FROM Penalty WHERE Id = ?"
-        params = (id,)
+        params = (penalty_id,)
         r = self._database.execute_single_query(query, params)
 
         return Penalty(id=r[0], description=r[1],
                        type=r[2], penalty=r[3],
-                       lower_limit=r[4], upper_limit=r[5])
+                       lower_limit=r[4], upper_limit=r[5],
+                       get_value_by_parent=r[6])
 
 
 class PenaltyKindTableAccess(AbstractTableAccess[PenaltyKind]):

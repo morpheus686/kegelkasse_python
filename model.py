@@ -41,15 +41,15 @@ class TableModel(QAbstractTableModel, Generic[T]):
         return self._source[index]
 
     def insertRows(self, index, rows, parent=...):
-        list_len = len(self._source)
-        row_count = len(rows)
-        end_row = list_len + row_count - 1
-        self.beginInsertRows(index, list_len, end_row)
+        position = index.row()
+        self.beginInsertRows(parent, position, position + len(rows) - 1)
 
         for row in rows:
-            self._source.append(row)
+            self._source.insert(position, row)
+            position += 1
 
         self.endInsertRows()
+        return True
 
     def removeRows(self, row, count, parent=...):
         end_row = row + count - 1
@@ -76,7 +76,7 @@ class SumPerPlayerTablemodel(TableModel[SumPerPlayer]):
     BUTTON_COLUMN_NUMBER = 9
 
     def columnCount(self, parent=QModelIndex()) -> int:
-        return 9
+        return 7
 
     def data(self, index: Union[QModelIndex, QPersistentModelIndex], role: int = ...) -> Any:
         player = self._source[index.row()]
@@ -85,24 +85,20 @@ class SumPerPlayerTablemodel(TableModel[SumPerPlayer]):
         if role == Qt.ItemDataRole.DisplayRole:
             match column_index:
                 case 0:
-                    return player.date
-                case 1:
-                    return player.team_name
-                case 2:
                     return player.player_name
-                case 3:
+                case 1:
                     return player.full
-                case 4:
+                case 2:
                     return player.clear
-                case 5:
+                case 3:
                     return player.full + player.clear
-                case 6:
+                case 4:
                     return player.errors
-                case 7:
+                case 5:
                     return ""
-                case 8:
+                case 6:
                     return f"{player.penalty_sum:.2f} €"
-        elif role == Qt.ItemDataRole.CheckStateRole and index.column() == 7:
+        elif role == Qt.ItemDataRole.CheckStateRole and index.column() == 5:
             return bool(player.played)
 
         return None
@@ -112,22 +108,18 @@ class SumPerPlayerTablemodel(TableModel[SumPerPlayer]):
             if orientation == Qt.Orientation.Horizontal:
                 match section:
                     case 0:
-                        return "Spieldatum"
-                    case 1:
-                        return "Mannschaft"
-                    case 2:
                         return "Spieler"
-                    case 3:
+                    case 1:
                         return "Volle"
-                    case 4:
+                    case 2:
                         return "Abräumen"
-                    case 5:
+                    case 3:
                         return "Gesamt"
-                    case 6:
+                    case 4:
                         return "Fehler"
-                    case 7:
+                    case 5:
                         return "Gespielt"
-                    case 8:
+                    case 6:
                         return "Strafe"
             elif orientation == Qt.Orientation.Vertical:
                 return section + 1
@@ -137,7 +129,7 @@ class SumPerPlayerTablemodel(TableModel[SumPerPlayer]):
     def flags(self, index):
         flags = super().flags(index)
 
-        if index.column() == 7:
+        if index.column() == 5:
             flags = flags | Qt.ItemFlag.ItemIsUserCheckable
 
         return flags
@@ -201,7 +193,18 @@ class PlayerPenaltiesTableModel(TableModel[PlayerPenalties]):
         if index.column() == 1:
             current_row = self._source[index.row()]
 
-            if current_row.penalty != 6:
+            if not current_row.penalty_navigation.get_value_by_parent:
                 flags = flags | Qt.ItemFlag.ItemIsEditable
 
         return flags
+
+    def get_rowindex_of_error_row(self) -> int:
+        row_index = 0
+
+        for row in self._source:
+            if row.penalty_navigation.get_value_by_parent:
+                return row_index
+
+            row_index += 1
+
+        return -1
