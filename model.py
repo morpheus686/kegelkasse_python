@@ -73,8 +73,6 @@ class TableModel(QAbstractTableModel, Generic[T]):
 
 
 class SumPerPlayerTablemodel(TableModel[SumPerPlayer]):
-    BUTTON_COLUMN_NUMBER = 9
-
     def columnCount(self, parent=QModelIndex()) -> int:
         return 7
 
@@ -139,7 +137,7 @@ class PlayerPenaltiesTableModel(TableModel[PlayerPenalties]):
     def columnCount(self, parent=...):
         return 3
 
-    def headerData(self, section, orientation, role = ...):
+    def headerData(self, section, orientation, role=...):
         if role == Qt.ItemDataRole.DisplayRole:
             if orientation == Qt.Orientation.Horizontal:
                 match section:
@@ -169,23 +167,16 @@ class PlayerPenaltiesTableModel(TableModel[PlayerPenalties]):
         return None
 
     def setData(self, index, value, role=...):
-        try:
+        new_value = int(value)
+        index_row = index.row()
+
+        if role == Qt.ItemDataRole.EditRole and index.column() == 1:
+            self._source[index_row].value = new_value
+        elif role == Qt.ItemDataRole.DisplayRole:
             new_value = int(value)
-            index_row = index.row()
+            self._source[index_row].value = new_value
 
-            if role == Qt.ItemDataRole.EditRole and index.column() == 1:
-                self._source[index_row].value = new_value
-            elif role == Qt.ItemDataRole.DisplayRole:
-                new_value = int(value)
-                old_value = self._source[index_row].value
-                self._source[index_row].value = new_value
-
-                if old_value != new_value:
-                    self.dataChanged(index)
-
-            return True
-        except Exception:
-            return False
+        return True
 
     def flags(self, index):
         flags = super().flags(index)
