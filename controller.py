@@ -27,7 +27,7 @@ class MainWindowController:
         if self._games:
             self._sort_proxy_model.setSourceModel(self._penalty_tablemodel)
             self._currentGame = self._games[-1]
-            self.fill_table()
+            self.fill_form()
             self._view.tableView.setModel(self._sort_proxy_model)
             self.set_current_game_label()
 
@@ -37,19 +37,26 @@ class MainWindowController:
     def set_current_game_label(self):
         self._view.game_day_label.setText(self._currentGame.date)
 
-    def fill_table(self):
+    def fill_form(self):
         table_model = self._penalty_tablemodel
         table_model.remove_all_rows()
         sum_per_players = self._model.sum_per_player_view_access.get_by_game_id(self._currentGame.id)
         insert_index = table_model.createIndex(0, 0, QModelIndex())
         table_model.insertRows(insert_index, rows=sum_per_players, parent=QModelIndex())
 
+        game_stats = self._model.result_of_game_view_access.get_by_game_id(self._currentGame.id)
+        self._view.teamresult_lineedit.setText(str(game_stats.totalResult))
+        self._view.teamerrors_lineEdit.setText(str(game_stats.totalErrors))
+        self._view.full_lineEdit.setText(str(game_stats.totalFull))
+        self._view.clear_lineEdit.setText(str(game_stats.totalClear))
+        self._view.tableView.resizeColumnsToContents()
+
     def previous_button_clicked(self):
         current_index = self.get_current_index_of_game()
         previous_index = current_index - 1
         self._currentGame = self._games[previous_index]
         self.set_current_game_label()
-        self.fill_table()
+        self.fill_form()
 
         self.set_enabled_of_previous_pushbutton()
         self.set_enabled_of_next_pushbutton()
@@ -63,7 +70,7 @@ class MainWindowController:
         next_index = current_index + 1
         self._currentGame = self._games[next_index]
         self.set_current_game_label()
-        self.fill_table()
+        self.fill_form()
 
         self.set_enabled_of_next_pushbutton()
         self.set_enabled_of_previous_pushbutton()
@@ -109,7 +116,7 @@ class MainWindowController:
             for player_penalty in player_penalties:
                 self._model.player_penalty_access.update(player_penalty)
 
-            self.fill_table()
+            self.fill_form()
 
 
 class EditPenaltyDialogController:

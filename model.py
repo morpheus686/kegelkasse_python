@@ -3,7 +3,7 @@ from PySide6.QtCore import QAbstractTableModel, QModelIndex, QPersistentModelInd
 from PySide6.QtGui import Qt
 from database import Database
 from database_access import SumPerPlayerViewAccess, GamePlayerTableAccess, PlayerPenaltiesTableAccess, \
-    PenaltyTableAccess, GameTableAccess
+    PenaltyTableAccess, GameTableAccess, ResultOfGameViewAccess
 from table_data_classes import PlayerPenalties, GamePlayers
 from view_data_classes import SumPerPlayer
 
@@ -12,10 +12,12 @@ class MainWindowModel:
     def __init__(self, db_name: str):
         self._database = Database(db_name)
         self._sum_per_player_view_access = SumPerPlayerViewAccess(self._database)
+#       self._sum_per_game_view_access = SumPerGameViewAccess(self._database)
         self._game_player_access = GamePlayerTableAccess(self._database)
         self._player_penalty_access = PlayerPenaltiesTableAccess(self._database)
         self._penalty_access = PenaltyTableAccess(self._database)
         self._game_access = GameTableAccess(self._database)
+        self._result_of_game_access = ResultOfGameViewAccess(self._database)
 
     @property
     def sum_per_player_view_access(self):
@@ -36,6 +38,10 @@ class MainWindowModel:
     @property
     def game_access(self):
         return self._game_access
+
+    @property
+    def result_of_game_view_access(self):
+        return self._result_of_game_access
 
 
 class EditPenaltyDialogModel:

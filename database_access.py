@@ -136,20 +136,36 @@ class SumPerTeamViewAccess(AbstractDatabaseAccess[SumPerTeam]):
 class SumPerPlayerViewAccess(AbstractDatabaseAccess[SumPerPlayer]):
     def get_all(self) -> list[SumPerPlayer]:
         r = self._database.execute_query("SELECT * FROM SumPerPlayer")
-        return [SumPerPlayer(game_id=row[0], date=row[1], team_name=row[2],
-                             player_id=row[3], player_name=row[4], penalty_sum=row[5],
-                             full=row[6], clear=row[7], errors=row[8],
-                             played=row[9]) for row in r]
+        return self._create_sumperplayer_list(r)
 
     def get_by_game_id(self, game_id: int):
         query = "SELECT * FROM SumPerPlayer WHERE GameId = ?"
         params = (game_id,)
 
         r = self._database.execute_query(query, params)
+        return self._create_sumperplayer_list(r)
+
+    @staticmethod
+    def _create_sumperplayer_list(r):
         return [SumPerPlayer(game_id=row[0], date=row[1], team_name=row[2],
                              player_id=row[3], player_name=row[4], penalty_sum=row[5],
                              full=row[6], clear=row[7], errors=row[8],
                              played=row[9]) for row in r]
+
+
+class ResultOfGameViewAccess(AbstractDatabaseAccess[ResultOfGame]):
+    def get_all(self) -> list[ResultOfGame]:
+        r = self._database.execute_query("SELECT * FROM ResultOfGame")
+        return [ResultOfGame(id=row[0], totalFull=row[1],
+                             totalClear=row[2], totalResult=row[3],
+                             totalErrors=row[4]) for row in r]
+
+    def get_by_game_id(self, game_id: int) -> ResultOfGame:
+        params = (game_id,)
+        r = self._database.execute_single_query("SELECT * FROM ResultOfGame WHERE Id = ?", params)
+        return ResultOfGame(id=r[0], totalFull=r[1],
+                            totalClear=r[2], totalResult=r[3],
+                            totalErrors=r[4])
 
 
 if __name__ == "__main__":

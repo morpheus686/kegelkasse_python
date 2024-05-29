@@ -26,3 +26,12 @@ class SumPerGame:
     date: str
     team_name: str
     penalty_sum: float
+
+
+@dataclass
+class ResultOfGame:
+    id: int
+    totalFull: int
+    totalClear: int
+    totalResult: int
+    totalErrors: int
