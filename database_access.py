@@ -168,6 +168,16 @@ class ResultOfGameViewAccess(AbstractDatabaseAccess[ResultOfGame]):
                             totalErrors=r[4])
 
 
+class SumPerGameViewAccess(AbstractTableAccess[SumPerGame]):
+    def get_all(self) -> list[T]:
+        pass
+
+    def get_by_game_id(self, game_id: int) -> SumPerGame:
+        params = (game_id,)
+        r = self._database.execute_single_query("SELECT * FROM SumPerGame WHERE GameId = ?", params)
+        return SumPerGame(game_id=r[0], penalty_sum=r[1])
+
+
 if __name__ == "__main__":
     database_access = Database('strafenkatalog.db')
     tableManager = DefaultTeamPlayerTableAccess(database_access)

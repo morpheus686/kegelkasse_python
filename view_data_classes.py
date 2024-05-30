@@ -23,8 +23,7 @@ class SumPerTeam:
 
 @dataclass
 class SumPerGame:
-    date: str
-    team_name: str
+    game_id: int
     penalty_sum: float
 
 

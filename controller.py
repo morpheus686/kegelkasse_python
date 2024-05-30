@@ -51,6 +51,9 @@ class MainWindowController:
         self._view.clear_lineEdit.setText(str(game_stats.totalClear))
         self._view.tableView.resizeColumnsToContents()
 
+        sum_of_game = self._model.sum_per_game_view_access.get_by_game_id(self._currentGame.id)
+        self._view.paysum_lineedit.setText(f"{sum_of_game.penalty_sum:.2f} €")
+
     def previous_button_clicked(self):
         current_index = self.get_current_index_of_game()
         previous_index = current_index - 1
