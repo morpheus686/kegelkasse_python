@@ -16,6 +16,13 @@ class Game:
 
 
 @dataclass
+class PenaltyKind:
+    id: int
+    description: str
+    is_range: bool = False
+
+
+@dataclass
 class Penalty:
     id: int
     description: str
@@ -24,12 +31,7 @@ class Penalty:
     lower_limit: int
     upper_limit: int
     get_value_by_parent: bool
-
-
-@dataclass
-class PenaltyKind:
-    id: int
-    description: str
+    type_navigation: PenaltyKind = None
 
 
 @dataclass

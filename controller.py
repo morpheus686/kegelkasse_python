@@ -1,6 +1,5 @@
 from PySide6.QtCore import QModelIndex, Qt, QSortFilterProxyModel
 from PySide6.QtWidgets import QDialog
-
 from delegates import SpinBoxDelegate
 from edit_player_dialog import Ui_Dialog
 from main_window import Ui_MainWindow
