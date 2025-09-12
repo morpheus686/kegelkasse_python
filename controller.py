@@ -2,34 +2,57 @@ from PySide6.QtCore import QModelIndex, Qt, QSortFilterProxyModel
 from PySide6.QtWidgets import QDialog
 from delegates import SpinBoxDelegate
 from edit_player_dialog import Ui_Dialog
-from main_window import Ui_MainWindow
+from ui_maindow import Ui_MainWindow
 from model import MainWindowModel, EditPenaltyDialogModel, PlayerPenaltiesTableModel, SumPerPlayerTablemodel
 from table_data_classes import Game
+import asyncio
+import qasync
+import abc
 
+from PySide6.QtWidgets import QMainWindow
 
 class MainWindowController:
-    def __init__(self, model: MainWindowModel, view: Ui_MainWindow):
-        self._view: Ui_MainWindow = view
+    def __init__(self, model: MainWindowModel, mainWindow) -> None:
+        self._window = mainWindow
+        self._view: Ui_MainWindow = mainWindow.ui
         self._model = model
         self._currentGame: Game | None = None
         self._games: list[Game] = []
         self._penalty_tablemodel = SumPerPlayerTablemodel()
-        self._sort_proxy_model = QSortFilterProxyModel()
-
-    def initialize(self) -> None:
+        self._sort_proxy_model = QSortFilterProxyModel()        
+        self._loop = asyncio.get_event_loop()
+        
+        self._window.loaded.connect(self.window_loaded)
         self._view.previous_push_button.clicked.connect(self.previous_button_clicked)
         self._view.next_push_button.clicked.connect(self.next_pushbutton_clicked)
         self._view.tableView.doubleClicked.connect(self.table_doubleclick)
+        
+    def window_loaded(self):
+        self.initialize()
+        
+    async def initialize_async(self) -> None:
+        self._games = await self._model.game_access.get_all_async()
+        
+        if self._games:
+            self._sort_proxy_model.setSourceModel(self._penalty_tablemodel)
+            self._currentGame = self._games[-1]
+            await qasync.run_in_executor(None, self.fill_form())
+            self._view.tableView.setModel(self._sort_proxy_model)
+            
+            self.set_current_game_label()
+            self.set_enabled_of_previous_pushbutton()
+            self.set_enabled_of_next_pushbutton()
 
+    def initialize(self) -> None:
         self._games = self._model.game_access.get_all()
-
+        
         if self._games:
             self._sort_proxy_model.setSourceModel(self._penalty_tablemodel)
             self._currentGame = self._games[-1]
             self.fill_form()
             self._view.tableView.setModel(self._sort_proxy_model)
+            
             self.set_current_game_label()
-
             self.set_enabled_of_previous_pushbutton()
             self.set_enabled_of_next_pushbutton()
 
@@ -51,6 +74,23 @@ class MainWindowController:
         self._view.tableView.resizeColumnsToContents()
 
         sum_of_game = self._model.sum_per_game_view_access.get_by_game_id(self._currentGame.id)
+        self._view.paysum_lineedit.setText(f"{sum_of_game.penalty_sum:.2f} €")
+        
+    async def fill_form_async(self):
+        table_model = self._penalty_tablemodel
+        table_model.remove_all_rows()
+        sum_per_players = await self._model.sum_per_player_view_access.get_by_game_id_async(self._currentGame.id)
+        insert_index = table_model.createIndex(0, 0, QModelIndex())
+        table_model.insertRows(insert_index, rows=sum_per_players, parent=QModelIndex())
+
+        game_stats = await self._model.result_of_game_view_access.get_by_game_id_async(self._currentGame.id)
+        self._view.teamresult_lineedit.setText(str(game_stats.totalResult))
+        self._view.teamerrors_lineEdit.setText(str(game_stats.totalErrors))
+        self._view.full_lineEdit.setText(str(game_stats.totalFull))
+        self._view.clear_lineEdit.setText(str(game_stats.totalClear))
+        self._view.tableView.resizeColumnsToContents()
+
+        sum_of_game = await self._model.sum_per_game_view_access.get_by_game_id_async(self._currentGame.id)
         self._view.paysum_lineedit.setText(f"{sum_of_game.penalty_sum:.2f} €")
 
     def previous_button_clicked(self):
@@ -101,16 +141,8 @@ class MainWindowController:
         game_player.player_penalties_navigation = player_penalties
         dialog_model = EditPenaltyDialogModel(selected_player, game_player)
 
-        dialog = QDialog()
-        edit_players_penalties_dialog = Ui_Dialog()
-        edit_players_penalties_dialog.setupUi(dialog)
-
-        dialog_controller = EditPenaltyDialogController(dialog_model,
-                                                        edit_players_penalties_dialog)
-        dialog_controller.load_dialog()
-
-        dialog.exec()
-        dialog_result = dialog.result()
+        dialog_controller = EditPenaltyDialogController(dialog_model, Ui_Dialog())
+        dialog_result = dialog_controller.show_dialog()
 
         if dialog_result:
             self._model.game_player_access.update(game_player)
@@ -120,43 +152,59 @@ class MainWindowController:
 
             self.fill_form()
 
+class DialogController(abc.ABC):
+    def __init__(self, model, view):
+        self._model = model
+        self._dialog = QDialog()
+        self._view = view
+        
+        self._view.setupUi(self._dialog)
+    
+    @abc.abstractmethod
+    def show_dialog(self) -> int:
+        pass
 
-class EditPenaltyDialogController:
-    def __init__(self, edit_player_penalties_model: EditPenaltyDialogModel,
-                 edit_player_penalty_view: Ui_Dialog) -> None:
-        self._model = edit_player_penalties_model
-        self._view = edit_player_penalty_view
+class EditPenaltyDialogController(DialogController):
+    def __init__(self, edit_player_penalties_model: EditPenaltyDialogModel, view) -> None:
+        super().__init__(edit_player_penalties_model, view)
+             
         self._table_model = PlayerPenaltiesTableModel()
-
-    def load_dialog(self):
+        
         self._view.full_spin_box.setValue(self._model.game_player.full)
         self._view.clear_spin_box.setValue(self._model.game_player.clear)
         self._view.error_spin_box.setValue(self._model.game_player.errors)
+        
+        self._view.full_spin_box.valueChanged.connect(self.__full_value_changed)
+        self._view.clear_spin_box.valueChanged.connect(self.__clear_value_changed)
+        self._view.error_spin_box.valueChanged.connect(self.__error_value_changed)
+        
+    def show_dialog(self)-> int:
+        self.__initialize()        
+        self._dialog.exec()
+        return self._dialog.result()
 
+    def __initialize(self):
         insert_index = self._table_model.createIndex(0, 0, QModelIndex())
         self._table_model.insertRows(insert_index, self._model.game_player.player_penalties_navigation, QModelIndex())
 
         self._view.penaltyTable.setItemDelegate(SpinBoxDelegate())
         self._view.penaltyTable.setModel(self._table_model)
 
-        self._view.full_spin_box.valueChanged.connect(self.full_value_changed)
-        self._view.clear_spin_box.valueChanged.connect(self.clear_value_changed)
-        self._view.error_spin_box.valueChanged.connect(self.error_value_changed)
-        self.set_total_line_edit()
+        self.__set_total_line_edit()
 
-    def full_value_changed(self):
+    def __full_value_changed(self):
         self.set_total_line_edit()
         self._model.game_player.full = self._view.full_spin_box.value()
 
-    def clear_value_changed(self):
+    def __clear_value_changed(self):
         self.set_total_line_edit()
         self._model.game_player.clear = self._view.clear_spin_box.value()
 
-    def set_total_line_edit(self):
+    def __set_total_line_edit(self):
         total = self._view.full_spin_box.value() + self._view.clear_spin_box.value()
         self._view.total_line_edit.setText(str(total))
 
-    def error_value_changed(self):
+    def __error_value_changed(self):
         self._model.game_player.errors = self._view.error_spin_box.value()
         error_row_index = self._table_model.get_rowindex_of_error_row()
         index = self._table_model.index(error_row_index, 1, QModelIndex())

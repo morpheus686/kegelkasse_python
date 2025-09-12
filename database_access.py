@@ -15,11 +15,19 @@ class AbstractDatabaseAccess(abc.ABC, Generic[T]):
     @abc.abstractmethod
     def get_all(self) -> list[T]:
         pass
+    
+    @abc.abstractmethod
+    async def get_all_async(self) -> list[T]:
+        pass
 
 
 class AbstractTableAccess(AbstractDatabaseAccess, Generic[T]):
     @abc.abstractmethod
     def get_all(self) -> list[T]:
+        pass
+    
+    @abc.abstractmethod
+    async def get_all_async(self) -> list[T]:
         pass
 
 
@@ -28,16 +36,28 @@ class DefaultTeamPlayerTableAccess(AbstractTableAccess[DefaultTeamPlayer]):
         r = self._database.execute_query("SELECT * FROM DefaultTeamPlayer")
         return [DefaultTeamPlayer(id=row[0], player=row[1], team=row[2]) for row in r]
 
+    async def get_all_async(self) -> list[DefaultTeamPlayer]:
+        r = await self._database.execute_query_async("SELECT * FROM DefaultTeamPlayer")
+        return [DefaultTeamPlayer(id=row[0], player=row[1], team=row[2]) for row in r]
 
 class GameTableAccess(AbstractTableAccess[Game]):
     def get_all(self) -> list[Game]:
         r = self._database.execute_query("SELECT * FROM Game")
         return [Game(id=row[0], team=row[1], date=row[2]) for row in r]
 
+    async def get_all_async(self) -> list[Game]:
+        r = await self._database.execute_query_async("SELECT * FROM Game")
+        return [Game(id=row[0], team=row[1], date=row[2]) for row in r]
 
 class GamePlayerTableAccess(AbstractTableAccess[GamePlayers]):
     def get_all(self) -> list[GamePlayers]:
         r = self._database.execute_query("SELECT * FROM GamePlayers")
+        return [GamePlayers(id=r[0], game=r[1], player=r[2],
+                            paid=r[3], sum_points=r[4], full=r[5],
+                            clear=r[6], errors=r[7]) for row in r]
+        
+    async def get_all_async(self) -> list[GamePlayers]:
+        r = await self._database.execute_query_async("SELECT * FROM GamePlayers")
         return [GamePlayers(id=r[0], game=r[1], player=r[2],
                             paid=r[3], sum_points=r[4], full=r[5],
                             clear=r[6], errors=r[7]) for row in r]
@@ -70,6 +90,13 @@ class PenaltyTableAccess(AbstractTableAccess[Penalty]):
                         type=row[2], penalty=row[3],
                         lower_limit=row[4], upper_limit=row[5],
                         get_value_by_parent=row[6]) for row in r]
+        
+    async def get_all_async(self) -> list[Penalty]:
+        r = await self._database.execute_query_async("SELECT * FROM Penalty")
+        return [Penalty(id=row[0], description=row[1],
+                        type=row[2], penalty=row[3],
+                        lower_limit=row[4], upper_limit=row[5],
+                        get_value_by_parent=row[6]) for row in r]
 
     def get_by_id(self, penalty_id: int) -> Penalty:
         query = "SELECT * FROM Penalty WHERE Id = ?"
@@ -86,17 +113,29 @@ class PenaltyKindTableAccess(AbstractTableAccess[PenaltyKind]):
     def get_all(self) -> list[PenaltyKind]:
         r = self._database.execute_query("SELECT * FROM PenaltyKind")
         return [PenaltyKind(id=row[0], description=row[1]) for row in r]
+    
+    async def get_all_async(self) -> list[PenaltyKind]:
+        r = await self._database.execute_query_async("SELECT * FROM PenaltyKind")
+        return [PenaltyKind(id=row[0], description=row[1]) for row in r]
 
 
 class PlayerTableAccess(AbstractTableAccess[Player]):
     def get_all(self) -> list[Player]:
         r = self._database.execute_query("SELECT * FROM Player")
         return [Player(id=row[0], name=row[1]) for row in r]
+    
+    async def get_all_async(self) -> list[Player]:
+        r = await self._database.execute_query_async("SELECT * FROM Player")
+        return [Player(id=row[0], name=row[1]) for row in r]
 
 
 class PlayerPenaltiesTableAccess(AbstractTableAccess[PlayerPenalties]):
     def get_all(self) -> list[PlayerPenalties]:
         r = self._database.execute_query("SELECT * FROM PlayerPenalties")
+        return [PlayerPenalties(id=row[0], game_player=row[1], penalty=row[2], value=row[3]) for row in r]
+    
+    async def get_all_async(self) -> list[PlayerPenalties]:
+        r = await self._database.execute_query_async("SELECT * FROM PlayerPenalties")
         return [PlayerPenalties(id=row[0], game_player=row[1], penalty=row[2], value=row[3]) for row in r]
 
     def get_by_gameplayerid(self, gameplayerid: int) -> list[PlayerPenalties]:
@@ -119,11 +158,19 @@ class TeamTableAccess(AbstractTableAccess[Team]):
     def get_all(self) -> list[Team]:
         r = self._database.execute_query("SELECT * FROM Team")
         return [Team(id=row[0], name=row[1]) for row in r]
+    
+    async def get_all_async(self) -> list[Team]:
+        r = await self._database.execute_query_async("SELECT * FROM Team")
+        return [Team(id=row[0], name=row[1]) for row in r]
 
 
 class TeamPenaltiesTableAccess(AbstractTableAccess[TeamPenalties]):
     def get_all(self) -> list[TeamPenalties]:
         r = self._database.execute_query("SELECT * FROM PenaltyKind")
+        return [TeamPenalties(id=row[0], team=row[1], penalty=row[2]) for row in r]
+    
+    async def get_all_async(self) -> list[TeamPenalties]:
+        r = await self._database.execute_query_async("SELECT * FROM PenaltyKind")
         return [TeamPenalties(id=row[0], team=row[1], penalty=row[2]) for row in r]
 
 
@@ -131,11 +178,19 @@ class SumPerTeamViewAccess(AbstractDatabaseAccess[SumPerTeam]):
     def get_all(self) -> list[SumPerTeam]:
         r = self._database.execute_query("SELECT * FROM SumPerTeam")
         return [SumPerTeam(team_name=row[0], penalty_sum=row[1]) for row in r]
+    
+    async def get_all_async(self) -> list[SumPerTeam]:
+        r = await self._database.execute_query_async("SELECT * FROM SumPerTeam")
+        return [SumPerTeam(team_name=row[0], penalty_sum=row[1]) for row in r]
 
 
 class SumPerPlayerViewAccess(AbstractDatabaseAccess[SumPerPlayer]):
     def get_all(self) -> list[SumPerPlayer]:
         r = self._database.execute_query("SELECT * FROM SumPerPlayer")
+        return self._create_sumperplayer_list(r)
+    
+    async def get_all_async(self) -> list[SumPerPlayer]:
+        r = await self._database.execute_query_async("SELECT * FROM SumPerPlayer")
         return self._create_sumperplayer_list(r)
 
     def get_by_game_id(self, game_id: int):
@@ -143,6 +198,13 @@ class SumPerPlayerViewAccess(AbstractDatabaseAccess[SumPerPlayer]):
         params = (game_id,)
 
         r = self._database.execute_query(query, params)
+        return self._create_sumperplayer_list(r)
+    
+    async def get_by_game_id_async(self, game_id: int):
+        query = "SELECT * FROM SumPerPlayer WHERE GameId = ?"
+        params = (game_id,)
+
+        r = await self._database.execute_query_async(query, params)
         return self._create_sumperplayer_list(r)
 
     @staticmethod
@@ -159,6 +221,12 @@ class ResultOfGameViewAccess(AbstractDatabaseAccess[ResultOfGame]):
         return [ResultOfGame(id=row[0], totalFull=row[1],
                              totalClear=row[2], totalResult=row[3],
                              totalErrors=row[4]) for row in r]
+        
+    async def get_all_async(self) -> list[ResultOfGame]:
+        r = await self._database.execute_query_async("SELECT * FROM ResultOfGame")
+        return [ResultOfGame(id=row[0], totalFull=row[1],
+                             totalClear=row[2], totalResult=row[3],
+                             totalErrors=row[4]) for row in r]
 
     def get_by_game_id(self, game_id: int) -> ResultOfGame:
         params = (game_id,)
@@ -166,16 +234,32 @@ class ResultOfGameViewAccess(AbstractDatabaseAccess[ResultOfGame]):
         return ResultOfGame(id=r[0], totalFull=r[1],
                             totalClear=r[2], totalResult=r[3],
                             totalErrors=r[4])
+        
+    async def get_by_game_id_async(self, game_id: int) -> ResultOfGame:
+        params = (game_id,)
+        r = await self._database.execute_single_query_async("SELECT * FROM ResultOfGame WHERE Id = ?", params)
+        return ResultOfGame(id=r[0], totalFull=r[1],
+                            totalClear=r[2], totalResult=r[3],
+                            totalErrors=r[4])
 
 
 class SumPerGameViewAccess(AbstractTableAccess[SumPerGame]):
-    def get_all(self) -> list[T]:
+    def get_all(self) -> list[SumPerGame]:
         pass
 
     def get_by_game_id(self, game_id: int) -> SumPerGame:
         params = (game_id,)
         r = self._database.execute_single_query("SELECT * FROM SumPerGame WHERE GameId = ?", params)
         return SumPerGame(game_id=r[0], penalty_sum=r[1])
+    
+    async def get_by_game_id_async(self, game_id: int) -> SumPerGame:
+        params = (game_id,)
+        r = await self._database.execute_single_query_async("SELECT * FROM SumPerGame WHERE GameId = ?", params)
+        return SumPerGame(game_id=r[0], penalty_sum=r[1])
+    
+    async def get_all_async(self) -> list[SumPerGame]:
+        pass
+        
 
 
 if __name__ == "__main__":
