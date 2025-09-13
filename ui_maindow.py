@@ -11,6 +11,7 @@ from PySide6.QtWidgets import (QApplication, QGridLayout, QGroupBox, QHBoxLayout
     QMenuBar, QPushButton, QSizePolicy, QSpacerItem,
     QStatusBar, QTableView, QVBoxLayout, QWidget)
 
+
 class Ui_MainWindow(object):     
     def setupUi(self, MainWindow):
         if not MainWindow.objectName():

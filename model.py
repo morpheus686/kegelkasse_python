@@ -1,9 +1,20 @@
 from typing import Any, Union, TypeVar, Generic
-from PySide6.QtCore import QAbstractTableModel, QModelIndex, QPersistentModelIndex
+from PySide6.QtCore import (
+    QAbstractTableModel,
+    QModelIndex,
+    QPersistentModelIndex,
+)
 from PySide6.QtGui import Qt
 from database import Database
-from database_access import SumPerPlayerViewAccess, GamePlayerTableAccess, PlayerPenaltiesTableAccess, \
-    PenaltyTableAccess, GameTableAccess, ResultOfGameViewAccess, SumPerGameViewAccess
+from database_access import (
+    SumPerPlayerViewAccess,
+    GamePlayerTableAccess,
+    PlayerPenaltiesTableAccess,
+    PenaltyTableAccess,
+    GameTableAccess,
+    ResultOfGameViewAccess,
+    SumPerGameViewAccess,
+)
 from table_data_classes import PlayerPenalties, GamePlayers
 from view_data_classes import SumPerPlayer
 
@@ -11,45 +22,101 @@ from view_data_classes import SumPerPlayer
 class MainWindowModel:
     def __init__(self, db_name: str):
         self._database = Database(db_name)
-        self._sum_per_player_view_access = SumPerPlayerViewAccess(self._database)
+        self._sum_per_player_view_access = SumPerPlayerViewAccess(
+            self._database
+        )
         self._sum_per_game_view_access = SumPerGameViewAccess(self._database)
         self._game_player_access = GamePlayerTableAccess(self._database)
-        self._player_penalty_access = PlayerPenaltiesTableAccess(self._database)
+        self._player_penalty_access = PlayerPenaltiesTableAccess(
+            self._database
+        )
         self._penalty_access = PenaltyTableAccess(self._database)
         self._game_access = GameTableAccess(self._database)
         self._result_of_game_access = ResultOfGameViewAccess(self._database)
+    
+    def get_all_games(self):
+        return self._game_access.get_all()
+    
+    async def get_all_games_async(self):
+        return await self._game_access.get_all_async()
 
-    @property
-    def sum_per_player_view_access(self):
-        return self._sum_per_player_view_access
+    def get_results_per_game(self, game_id: int):
+        return self._result_of_game_access.get_by_game_id(game_id)
+    
+    async def get_results_per_game_async(self, game_id: int):
+        return await self._result_of_game_access.get_by_game_id_async(
+            game_id
+        )
+    
+    def get_all_sum_per_player(self, game_id: int) -> list[SumPerPlayer]:
+        return self._sum_per_player_view_access.get_by_game_id(game_id)
+    
+    async def get_all_sum_per_player_async(self, game_id: int) -> list[SumPerPlayer]:
+        return await self._sum_per_player_view_access.get_by_game_id_async(
+            game_id
+        )
+        
+    def get_by_game_and_player_id(
+        self,
+        game_id: int,
+        player_id: int
+    ) -> Union[GamePlayers, None]:
+        return self._game_player_access.get_by_game_and_player(
+            game_id,
+            player_id
+        )
+        
+    async def get_by_game_and_player_id_async(
+        self,
+        game_id: int,
+        player_id: int
+    ) -> Union[GamePlayers, None]:
+        return await self._game_player_access.get_by_game_and_player_id_async(
+            game_id,
+            player_id
+        )
+        
+    def get_sum_per_game(self, game_id: int):
+        return self._sum_per_game_view_access.get_by_game_id(game_id)
+    
+    async def get_sum_per_game_async(self, game_id: int):
+        return await self._sum_per_game_view_access.get_by_game_id_async(
+            game_id
+        )
+        
+    def get_penalty(self, penalty_id: int):
+        return self._penalty_access.get_by_id(penalty_id)
+    
+    async def get_penalty_async(self, penalty_id: int):
+        return await self._penalty_access.get_by_id_async(penalty_id)
+    
+    def get_penalty_by_gameplayerid(self, game_player_id: int) -> list[PlayerPenalties]:
+        return self._player_penalty_access.get_by_gameplayerid(game_player_id)
+    
+    async def get_penalty_by_gameplayerid_async(self, game_player_id: int) -> list[PlayerPenalties]:
+        return await self._player_penalty_access.get_by_gameplayerid_async(
+            game_player_id
+        )
+        
+    def update_game_player(self, game_player: GamePlayers):
+        self._game_player_access.update(game_player)
+        
+    async def update_game_player_async(self, game_player: GamePlayers):
+        await self._game_player_access.update_async(game_player)
+        
+    def update_player_penalty(self, player_penalty: PlayerPenalties):
+        self._player_penalty_access.update(player_penalty)
 
-    @property
-    def game_player_access(self):
-        return self._game_player_access
-
-    @property
-    def player_penalty_access(self):
-        return self._player_penalty_access
-
-    @property
-    def penalty_access(self):
-        return self._penalty_access
-
-    @property
-    def game_access(self):
-        return self._game_access
-
-    @property
-    def result_of_game_view_access(self):
-        return self._result_of_game_access
-
-    @property
-    def sum_per_game_view_access(self):
-        return self._sum_per_game_view_access
-
-
+    async def update_player_penalty_async(self, player_penalty: PlayerPenalties):
+        await self._player_penalty_access.update_async(player_penalty)
+    
+    
 class EditPenaltyDialogModel:
-    def __init__(self, selected_player: SumPerPlayer, game_player: GamePlayers):
+    def __init__(
+        self,
+        selected_player: SumPerPlayer,
+        game_player: GamePlayers
+    ):
         self._selected_player = selected_player
         self._game_player = game_player
 
@@ -69,7 +136,7 @@ class TableModel(QAbstractTableModel, Generic[T]):
     def __init__(self):
         super().__init__()
         self._source: list[T] = []
-
+       
     def get(self, index: int) -> T:
         return self._source[index]
 
@@ -111,7 +178,11 @@ class SumPerPlayerTablemodel(TableModel[SumPerPlayer]):
     def columnCount(self, parent=QModelIndex()) -> int:
         return 7
 
-    def data(self, index: Union[QModelIndex, QPersistentModelIndex], role: int = ...) -> Any:
+    def data(
+        self,
+        index: Union[QModelIndex, QPersistentModelIndex],
+        role: int = ...
+    ) -> Any:
         player = self._source[index.row()]
         column_index = index.column()
 
@@ -130,13 +201,23 @@ class SumPerPlayerTablemodel(TableModel[SumPerPlayer]):
                 case 5:
                     return None
                 case 6:
-                    return f"{player.penalty_sum:.2f} €"
-        elif role == Qt.ItemDataRole.CheckStateRole and index.column() == self.PLAYED_COLUMN_INDEX:
+                    return (
+                        f"{player.penalty_sum:.2f} €"
+                    )
+        if (
+            role == Qt.ItemDataRole.CheckStateRole
+            and index.column() == self.PLAYED_COLUMN_INDEX
+        ):
             return bool(player.played)
 
         return None
 
-    def headerData(self, section: int, orientation: Qt.Orientation, role: int = ...) -> Any:
+    def headerData(
+        self,
+        section: int,
+        orientation: Qt.Orientation,
+        role: int = ...
+    ) -> Any:
         if role == Qt.ItemDataRole.DisplayRole:
             if orientation == Qt.Orientation.Horizontal:
                 match section:
@@ -213,7 +294,9 @@ class PlayerPenaltiesTableModel(TableModel[PlayerPenalties]):
                 self._source[index_row].value = new_value
                 roles = [role]
                 self.dataChanged.emit(index, index, roles)
-                pay_index = self.index(index_row, index_column + 1, QModelIndex())
+                pay_index = self.index(
+                    index_row, index_column + 1, QModelIndex()
+                )
                 self.dataChanged.emit(pay_index, pay_index, roles)
 
         return True
