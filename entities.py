@@ -13,6 +13,8 @@ class Game:
     id: int
     team: int
     date: str
+    vs: str
+    gameday: int
 
 
 @dataclass
@@ -68,8 +70,9 @@ class GamePlayers:
     game: int
     player: int
     paid: float
+    sum_points: int
     full: int
     clear: int
-    sum_points: int
     errors: int
+    played: bool
     player_penalties_navigation: list[PlayerPenalties] = None

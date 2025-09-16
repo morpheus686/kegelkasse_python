@@ -1,5 +1,5 @@
 import abc
-from table_data_classes import Penalty
+from entities import Penalty
 
 
 class CalculatorBase(abc.ABC):

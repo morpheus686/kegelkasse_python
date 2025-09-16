@@ -9,9 +9,8 @@ from model import (
     PlayerPenaltiesTableModel,
     SumPerPlayerTablemodel,
 )
-from table_data_classes import Game
+from entities import Game
 import asyncio
-import qasync
 import abc
 
 
@@ -23,7 +22,7 @@ class MainWindowController:
         self._currentGame: Game | None = None
         self._games: list[Game] = []
         self._penalty_tablemodel = SumPerPlayerTablemodel()
-        self._sort_proxy_model = QSortFilterProxyModel()        
+        self._sort_proxy_model = QSortFilterProxyModel()
         self._loop = asyncio.get_event_loop()
         
         self._window.loaded.connect(self.window_loaded)
@@ -44,7 +43,6 @@ class MainWindowController:
         if self._games:
             self._sort_proxy_model.setSourceModel(self._penalty_tablemodel)
             self._currentGame = self._games[-1]
-            await qasync.run(None, self.fill_form())
             self._view.tableView.setModel(self._sort_proxy_model)
             
             self.set_current_game_label()
@@ -68,8 +66,14 @@ class MainWindowController:
         self._view.game_day_label.setText(self._currentGame.date)
 
     def fill_form(self):
+        self._update_table_in_view()
+        self.update_game_stats_in_view()
+        self._update_sum_in_view()
+        
+    def _update_table_in_view(self):
         table_model = self._penalty_tablemodel
         table_model.remove_all_rows()
+        
         sum_per_players = self._model.get_all_sum_per_player(
             self._currentGame.id
         )
@@ -79,7 +83,10 @@ class MainWindowController:
             rows=sum_per_players,
             parent=QModelIndex()
         )
+        
+        self._view.tableView.resizeColumnsToContents()
 
+    def update_game_stats_in_view(self):
         game_stats = self._model.get_results_per_game(
             self._currentGame.id
         )
@@ -88,11 +95,12 @@ class MainWindowController:
         self._view.teamerrors_lineEdit.setText(str(game_stats.totalErrors))
         self._view.full_lineEdit.setText(str(game_stats.totalFull))
         self._view.clear_lineEdit.setText(str(game_stats.totalClear))
-        self._view.tableView.resizeColumnsToContents()
 
+    def _update_sum_in_view(self):
         sum_of_game = self._model.get_sum_per_game(
             self._currentGame.id
             )
+        
         self._view.paysum_lineedit.setText(f"{sum_of_game.penalty_sum:.2f} €")
 
     async def fill_form_async(self):
@@ -166,7 +174,7 @@ class MainWindowController:
             )
         player_penalties = self._model.get_penalty_by_gameplayerid(
             game_player.id
-            )        
+            )
 
         for player_penalty in player_penalties:
             player_penalty.penalty_navigation = self._model.get_penalty(
@@ -231,7 +239,7 @@ class EditPenaltyDialogController(DialogController):
             )
         
     def show_dialog(self) -> int:
-        self.__initialize()        
+        self.__initialize()
         self._dialog.exec()
         return self._dialog.result()
 
@@ -257,7 +265,10 @@ class EditPenaltyDialogController(DialogController):
         self._model.game_player.clear = self._view.clear_spin_box.value()
 
     def __set_total_line_edit(self):
-        total = self._view.full_spin_box.value() + self._view.clear_spin_box.value()
+        full = self._view.full_spin_box.value()
+        clear = self._view.clear_spin_box.value()
+        total = full + clear
+        
         self._view.total_line_edit.setText(str(total))
 
     def __error_value_changed(self):

@@ -7,52 +7,56 @@ from PySide6.QtCore import (
 from PySide6.QtGui import Qt
 from database import Database
 from database_access import (
-    SumPerPlayerViewAccess,
-    GamePlayerTableAccess,
-    PlayerPenaltiesTableAccess,
-    PenaltyTableAccess,
-    GameTableAccess,
-    ResultOfGameViewAccess,
-    SumPerGameViewAccess,
+    SumPerPlayerView,
+    GamePlayerTable,
+    PlayerPenaltiesTable,
+    PenaltyTable,
+    GameTable,
+    ResultOfGameView,
+    SumPerGameView,
 )
-from table_data_classes import PlayerPenalties, GamePlayers
+from entities import PlayerPenalties, GamePlayers
 from view_data_classes import SumPerPlayer
 
 
 class MainWindowModel:
     def __init__(self, db_name: str):
         self._database = Database(db_name)
-        self._sum_per_player_view_access = SumPerPlayerViewAccess(
+        self._sum_per_player_view = SumPerPlayerView(
             self._database
         )
-        self._sum_per_game_view_access = SumPerGameViewAccess(self._database)
-        self._game_player_access = GamePlayerTableAccess(self._database)
-        self._player_penalty_access = PlayerPenaltiesTableAccess(
+        
+        self._game_player_table = GamePlayerTable(self._database)
+        self._player_penalty_table = PlayerPenaltiesTable(
             self._database
         )
-        self._penalty_access = PenaltyTableAccess(self._database)
-        self._game_access = GameTableAccess(self._database)
-        self._result_of_game_access = ResultOfGameViewAccess(self._database)
+        self._penalty_table = PenaltyTable(self._database)
+        self._game_table = GameTable(self._database)
+        
+        self._result_of_game_view = ResultOfGameView(self._database)
+        self._sum_per_game_view = SumPerGameView(self._database)
     
     def get_all_games(self):
-        return self._game_access.get_all()
+        return self._game_table.get_all()
     
     async def get_all_games_async(self):
-        return await self._game_access.get_all_async()
+        return await self._game_table.get_all_async()
 
     def get_results_per_game(self, game_id: int):
-        return self._result_of_game_access.get_by_game_id(game_id)
+        return self._result_of_game_view.get_by_game_id(game_id)
     
     async def get_results_per_game_async(self, game_id: int):
-        return await self._result_of_game_access.get_by_game_id_async(
+        return await self._result_of_game_view.get_by_game_id_async(
             game_id
         )
     
     def get_all_sum_per_player(self, game_id: int) -> list[SumPerPlayer]:
-        return self._sum_per_player_view_access.get_by_game_id(game_id)
+        return self._sum_per_player_view.get_by_game_id(game_id)
     
-    async def get_all_sum_per_player_async(self, game_id: int) -> list[SumPerPlayer]:
-        return await self._sum_per_player_view_access.get_by_game_id_async(
+    async def get_all_sum_per_player_async(
+                                            self, game_id: int
+            ) -> list[SumPerPlayer]:
+        return await self._sum_per_player_view.get_by_game_id_async(
             game_id
         )
         
@@ -61,7 +65,7 @@ class MainWindowModel:
         game_id: int,
         player_id: int
     ) -> Union[GamePlayers, None]:
-        return self._game_player_access.get_by_game_and_player(
+        return self._game_player_table.get_by_game_and_player(
             game_id,
             player_id
         )
@@ -71,46 +75,52 @@ class MainWindowModel:
         game_id: int,
         player_id: int
     ) -> Union[GamePlayers, None]:
-        return await self._game_player_access.get_by_game_and_player_id_async(
+        return await self._game_player_table.get_by_game_and_player_id_async(
             game_id,
             player_id
         )
         
     def get_sum_per_game(self, game_id: int):
-        return self._sum_per_game_view_access.get_by_game_id(game_id)
+        return self._sum_per_game_view.get_by_game_id(game_id)
     
     async def get_sum_per_game_async(self, game_id: int):
-        return await self._sum_per_game_view_access.get_by_game_id_async(
+        return await self._sum_per_game_view.get_by_game_id_async(
             game_id
         )
         
     def get_penalty(self, penalty_id: int):
-        return self._penalty_access.get_by_id(penalty_id)
+        return self._penalty_table.get_by_id(penalty_id)
     
     async def get_penalty_async(self, penalty_id: int):
-        return await self._penalty_access.get_by_id_async(penalty_id)
+        return await self._penalty_table.get_by_id_async(penalty_id)
     
-    def get_penalty_by_gameplayerid(self, game_player_id: int) -> list[PlayerPenalties]:
-        return self._player_penalty_access.get_by_gameplayerid(game_player_id)
+    def get_penalty_by_gameplayerid(
+                                    self, game_player_id: int
+            ) -> list[PlayerPenalties]:
+        return self._player_penalty_table.get_by_gameplayerid(game_player_id)
     
-    async def get_penalty_by_gameplayerid_async(self, game_player_id: int) -> list[PlayerPenalties]:
-        return await self._player_penalty_access.get_by_gameplayerid_async(
+    async def get_penalty_by_gameplayerid_async(
+                                                self, game_player_id: int
+            ) -> list[PlayerPenalties]:
+        return await self._player_penalty_table.get_by_gameplayerid_async(
             game_player_id
         )
         
     def update_game_player(self, game_player: GamePlayers):
-        self._game_player_access.update(game_player)
+        self._game_player_table.update(game_player)
         
     async def update_game_player_async(self, game_player: GamePlayers):
-        await self._game_player_access.update_async(game_player)
+        await self._game_player_table.update_async(game_player)
         
     def update_player_penalty(self, player_penalty: PlayerPenalties):
-        self._player_penalty_access.update(player_penalty)
+        self._player_penalty_table.update(player_penalty)
 
-    async def update_player_penalty_async(self, player_penalty: PlayerPenalties):
-        await self._player_penalty_access.update_async(player_penalty)
-    
-    
+    async def update_player_penalty_async(
+                                        self, player_penalty: PlayerPenalties
+            ):
+        await self._player_penalty_table.update_async(player_penalty)
+
+
 class EditPenaltyDialogModel:
     def __init__(
         self,
@@ -136,31 +146,30 @@ class TableModel(QAbstractTableModel, Generic[T]):
     def __init__(self):
         super().__init__()
         self._source: list[T] = []
-       
+
     def get(self, index: int) -> T:
         return self._source[index]
 
     def insertRows(self, index, rows, parent=...):
+        if not rows:
+            return False
+
         position = index.row()
+
         self.beginInsertRows(parent, position, position + len(rows) - 1)
-
-        for row in rows:
-            self._source.insert(position, row)
-            position += 1
-
+        self._source[position:position] = rows
         self.endInsertRows()
+
         return True
 
     def removeRows(self, row, count, parent=...):
-        end_row = row + count - 1
+        if row < 0 or count <= 0 or row >= len(self._source):
+            return False
+
+        end_row = min(row + count - 1, len(self._source) - 1)
         self.beginRemoveRows(QModelIndex(), row, end_row)
 
-        while end_row >= row:
-            if len(self._source) == 0:
-                break
-
-            self._source.pop(end_row)
-            end_row -= 1
+        del self._source[row:end_row + 1]
 
         self.endRemoveRows()
 

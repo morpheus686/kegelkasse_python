@@ -13,7 +13,7 @@ if __name__ == '__main__':
     model = MainWindowModel('Kegelkasse.db')
     window = main_window.MainWindow(model)
     window.show()
-    apply_stylesheet(app, "light_blue.xml", invert_secondary=True)
+    apply_stylesheet(app, "dark_blue.xml", invert_secondary=True)
     app.exec()
 
     with loop:

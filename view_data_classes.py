@@ -13,6 +13,7 @@ class SumPerPlayer:
     clear: int
     errors: int
     played: int
+    result: int
 
 
 @dataclass
