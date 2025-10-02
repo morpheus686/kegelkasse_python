@@ -8,6 +8,7 @@ from entities import (
     PlayerPenalties,
     Team,
     TeamPenalties,
+    Player
 )
 from database import Database
 from view_data_classes import (
@@ -172,6 +173,13 @@ class PlayerPenaltiesTable(AbstractDatabaseObject[PlayerPenalties]):
 
         params = (player_penalty.value, player_penalty.id)
         await self._database.execute_command_async(query, params)
+
+
+class PlayerTable(AbstractDatabaseObject[Player]):
+    def __init__(self, database_connection):
+        super().__init__(database_connection)
+        self._table_name = "Player"
+        self._mapper = lambda row: Player(*row)
 
 
 class TeamTableAccess(AbstractDatabaseObject[Team]):

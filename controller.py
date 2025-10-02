@@ -1,15 +1,20 @@
 from PySide6.QtCore import QModelIndex, Qt, QSortFilterProxyModel
-from PySide6.QtWidgets import QDialog
+from PySide6.QtWidgets import QDialog, QDialogButtonBox
 from delegates import SpinBoxDelegate
 from edit_player_dialog import Ui_Dialog
+from addGameDialogView_ui import Ui_Dialog as AddGameDialogUi
 from ui_maindow import Ui_MainWindow
 from model import (
     MainWindowModel,
     EditPenaltyDialogModel,
     PlayerPenaltiesTableModel,
     SumPerPlayerTablemodel,
+    AddGameDialogModel,
+    PlayerTableModel
+    
 )
 from entities import Game
+from typing import Any, Union, TypeVar, Generic
 import asyncio
 import abc
 
@@ -33,6 +38,15 @@ class MainWindowController:
             self.next_pushbutton_clicked
             )
         self._view.tableView.doubleClicked.connect(self.table_doubleclick)
+        self._view.addGamePushButton.clicked.connect(self.add_game_button_clicked)
+        
+    def add_game_button_clicked(self):
+        dialog_model = AddGameDialogModel(self._model._database)
+        dialog_controller = AddGameDialogController(dialog_model, AddGameDialogUi())
+        dialog_result = dialog_controller.show_dialog()
+        
+        if dialog_result:
+            self.initialize()
         
     def window_loaded(self):
         self.initialize()
@@ -196,26 +210,34 @@ class MainWindowController:
                 self._model.update_player_penalty(player_penalty)
 
             self.fill_form()
+            
+
+TModel = TypeVar('TModel')
 
 
-class DialogController(abc.ABC):
-    def __init__(self, model, view):
-        self._model = model
+class DialogController(abc.ABC, Generic[TModel]):
+    def __init__(self, model: TModel, view):
+        self.__model = model
         self._dialog = QDialog()
         self._view = view
         
         self._view.setupUi(self._dialog)
     
-    @abc.abstractmethod
     def show_dialog(self) -> int:
+        self.initialize()
+        self._dialog.exec()
+        return self._dialog.result()
+    
+    @abc.abstractmethod
+    def initialize(self):
         pass
     
     @property
-    def model(self):
-        return self._model
+    def model(self) -> TModel:
+        return self.__model
 
 
-class EditPenaltyDialogController(DialogController):
+class EditPenaltyDialogController(DialogController[EditPenaltyDialogModel]):
     def __init__(
             self,
             edit_player_penalties_model: EditPenaltyDialogModel,
@@ -224,9 +246,9 @@ class EditPenaltyDialogController(DialogController):
              
         self._table_model = PlayerPenaltiesTableModel()
         
-        self._view.full_spin_box.setValue(self._model.game_player.full)
-        self._view.clear_spin_box.setValue(self._model.game_player.clear)
-        self._view.error_spin_box.setValue(self._model.game_player.errors)
+        self._view.full_spin_box.setValue(self.model.game_player.full)
+        self._view.clear_spin_box.setValue(self.model.game_player.clear)
+        self._view.error_spin_box.setValue(self.model.game_player.errors)
         
         self._view.full_spin_box.valueChanged.connect(
             self.__full_value_changed
@@ -237,17 +259,12 @@ class EditPenaltyDialogController(DialogController):
         self._view.error_spin_box.valueChanged.connect(
             self.__error_value_changed
             )
-        
-    def show_dialog(self) -> int:
-        self.__initialize()
-        self._dialog.exec()
-        return self._dialog.result()
 
-    def __initialize(self):
+    def initialize(self):
         insert_index = self._table_model.createIndex(0, 0, QModelIndex())
         self._table_model.insertRows(
             insert_index,
-            self._model.game_player.player_penalties_navigation,
+            self.model.game_player.player_penalties_navigation,
             QModelIndex()
         )
 
@@ -258,11 +275,11 @@ class EditPenaltyDialogController(DialogController):
 
     def __full_value_changed(self):
         self.__set_total_line_edit()
-        self._model.game_player.full = self._view.full_spin_box.value()
+        self.model.game_player.full = self._view.full_spin_box.value()
 
     def __clear_value_changed(self):
         self.__set_total_line_edit()
-        self._model.game_player.clear = self._view.clear_spin_box.value()
+        self.model.game_player.clear = self._view.clear_spin_box.value()
 
     def __set_total_line_edit(self):
         full = self._view.full_spin_box.value()
@@ -272,8 +289,55 @@ class EditPenaltyDialogController(DialogController):
         self._view.total_line_edit.setText(str(total))
 
     def __error_value_changed(self):
-        self._model.game_player.errors = self._view.error_spin_box.value()
+        self.model.game_player.errors = self._view.error_spin_box.value()
         error_row_index = self._table_model.get_rowindex_of_error_row()
         index = self._table_model.index(error_row_index, 1, QModelIndex())
         self._table_model.setData(index, self._view.error_spin_box.value(),
                                   Qt.ItemDataRole.DisplayRole)
+
+
+class AddGameDialogController(DialogController[AddGameDialogModel]):
+    def __init__(self, model: AddGameDialogModel, view) -> None:
+        super().__init__(model, view)
+        
+        self._table_model = PlayerTableModel()
+        self._table_model.dataChanged.connect(self.on_data_changed)
+        
+        self._view.dateEdit.setDate(self.model.game_date)
+        self._view.dateEdit.dateChanged.connect(self.date_changed)
+        self._view.opponentLineEdit.textChanged.connect(self.set_opponent)
+        
+        self._is_opponent_valid = False
+               
+    def initialize(self):
+        self._view.playerTtableView.verticalHeader().setVisible(False)
+        self._view.playerTtableView.setModel(self._table_model)
+                
+        self.model.load_players()
+        insert_index = self._table_model.createIndex(0, 0, QModelIndex())
+        self._table_model.insertRows(insert_index, self.model.players, QModelIndex())
+        self._view.playerTtableView.resizeColumnsToContents()
+        self.update_save_button()
+    
+    def date_changed(self, new_date):
+        self.model.current_date = new_date
+        
+    def set_opponent(self, text: str):
+        self.model.opponent = text
+        stripped_text = text.strip()
+        self._is_opponent_valid = bool(stripped_text)
+        self.update_save_button()
+        
+        if self._is_opponent_valid:
+            self._view.opponentLineEdit.setStyleSheet("")
+            self._view.opponentLineEdit.setToolTip("")
+        else:
+            self._view.opponentLineEdit.setStyleSheet("border: 1px solid red;") # rot/rosa
+            self._view.opponentLineEdit.setToolTip("Die gegenerische Mannschaft muss angegeben werden.")
+    
+    def on_data_changed(self, topLeft, bottomRight, roles):
+        self.update_save_button()
+    
+    def update_save_button(self):
+        is_enabled = self._is_opponent_valid and self._table_model.is_any_player_selected
+        self._view.buttonBox.button(QDialogButtonBox.StandardButton.Save).setEnabled(is_enabled)

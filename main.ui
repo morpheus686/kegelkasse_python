@@ -64,6 +64,16 @@
           </property>
          </spacer>
         </item>
+        <item>
+         <widget class="QPushButton" name="addGamePushButton">
+          <property name="text">
+           <string/>
+          </property>
+          <property name="icon">
+           <iconset theme="QIcon::ThemeIcon::ListAdd"/>
+          </property>
+         </widget>
+        </item>
        </layout>
       </item>
       <item>
@@ -231,7 +241,7 @@
      <x>0</x>
      <y>0</y>
      <width>950</width>
-     <height>22</height>
+     <height>33</height>
     </rect>
    </property>
   </widget>

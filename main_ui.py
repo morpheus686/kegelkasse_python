@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 
 ################################################################################
-## Form generated from reading UI file 'mainArsyQv.ui'
+## Form generated from reading UI file 'main.ui'
 ##
-## Created by: Qt User Interface Compiler version 6.9.2
+## Created by: Qt User Interface Compiler version 6.7.0
 ##
 ## WARNING! All changes made in this file will be lost when recompiling UI file!
 ################################################################################
@@ -64,7 +64,7 @@ class Ui_MainWindow(object):
 
         self.addGamePushButton = QPushButton(self.centralwidget)
         self.addGamePushButton.setObjectName(u"addGamePushButton")
-        icon2 = QIcon(QIcon.fromTheme(QIcon.ThemeIcon.ListAdd))
+        icon2 = QIcon(QIcon.fromTheme(u"QIcon::ThemeIcon::ListAdd"))
         self.addGamePushButton.setIcon(icon2)
 
         self.horizontalLayout.addWidget(self.addGamePushButton)

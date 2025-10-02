@@ -14,9 +14,12 @@ from database_access import (
     GameTable,
     ResultOfGameView,
     SumPerGameView,
+    PlayerTable
 )
 from entities import PlayerPenalties, GamePlayers
 from view_data_classes import SumPerPlayer
+from dataclasses import dataclass
+from datetime import date
 
 
 class MainWindowModel:
@@ -139,6 +142,29 @@ class EditPenaltyDialogModel:
         return self._selected_player
 
 
+class AddGameDialogModel:
+    def __init__(self, database):
+        self._database = database
+        self.game_date = date.today()
+        self.opponent = ""
+        self.game_day = 1
+        
+        self._players = []
+        
+    @property
+    def players(self):
+        return self._players
+    
+    def load_players(self) -> None:
+        player_table = PlayerTable(self._database)
+        
+        all_players = player_table.get_all()
+        
+        for player in all_players:
+            item = PlayerTableModelItem(False, player.name)
+            self._players.append(item)
+            
+        
 T = TypeVar('T')
 
 
@@ -331,3 +357,82 @@ class PlayerPenaltiesTableModel(TableModel[PlayerPenalties]):
             row_index += 1
 
         return -1
+
+
+@dataclass
+class PlayerTableModelItem():
+    is_playing: bool
+    player_name: str
+
+
+class PlayerTableModel(TableModel[PlayerTableModelItem]):
+    def headerData(
+        self,
+        section: int,
+        orientation: Qt.Orientation,
+        role: int = ...
+    ) -> Any:
+        if role == Qt.ItemDataRole.DisplayRole:
+            if orientation == Qt.Orientation.Horizontal:
+                match section:
+                    case 0:
+                        return ""
+                    case 1:
+                        return "Spieler"
+            elif orientation == Qt.Orientation.Vertical:
+                return section + 1
+
+        return None
+
+    def columnCount(self, parent=...):
+        return 2
+    
+    def data(
+        self,
+        index: Union[QModelIndex, QPersistentModelIndex],
+        role: int = ...
+    ) -> Any:
+        row = self._source[index.row()]
+        column_index = index.column()
+
+        if role == Qt.ItemDataRole.DisplayRole:
+            if column_index == 1:
+                return row.player_name
+        
+        if (
+            role == Qt.ItemDataRole.CheckStateRole
+            and column_index == 0
+        ):
+            return Qt.CheckState.Checked if row.is_playing else Qt.CheckState.Unchecked
+
+        return None
+    
+    def setData(self, index, value, role=...):
+        if not index.isValid():
+            return False
+        
+        row_index = index.row()
+        if row_index < 0 or row_index >= len(self._source):
+            return False
+        
+        row = self._source[row_index]
+        column_index = index.column()
+        
+        if role in [Qt.ItemDataRole.CheckStateRole, Qt.ItemDataRole.DisplayRole] and column_index == 0:
+            row.is_playing = (value == Qt.CheckState.Checked.value)
+            self.dataChanged.emit(index, index, [role])
+            return True
+        
+        return False
+    
+    def flags(self, index: QModelIndex):
+        flags = super().flags(index) | Qt.ItemFlag.ItemIsEnabled
+        
+        if index.column() == 0:
+            flags = flags | Qt.ItemFlag.ItemIsUserCheckable
+
+        return flags
+    
+    @property
+    def is_any_player_selected(self) -> bool:
+        return any(item.is_playing for item in self._source)
