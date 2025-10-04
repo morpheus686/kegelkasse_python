@@ -14,8 +14,7 @@ from model import (
     
 )
 from entities import Game
-from typing import Any, Union, TypeVar, Generic
-import asyncio
+from typing import TypeVar, Generic
 import abc
 
 
@@ -28,7 +27,6 @@ class MainWindowController:
         self._games: list[Game] = []
         self._penalty_tablemodel = SumPerPlayerTablemodel()
         self._sort_proxy_model = QSortFilterProxyModel()
-        self._loop = asyncio.get_event_loop()
         
         self._window.loaded.connect(self.window_loaded)
         self._view.previous_push_button.clicked.connect(
@@ -46,22 +44,11 @@ class MainWindowController:
         dialog_result = dialog_controller.show_dialog()
         
         if dialog_result:
+            dialog_model.save_game()
             self.initialize()
         
     def window_loaded(self):
         self.initialize()
-        
-    async def initialize_async(self) -> None:
-        self._games = await self._model.game_access.get_all_async()
-        
-        if self._games:
-            self._sort_proxy_model.setSourceModel(self._penalty_tablemodel)
-            self._currentGame = self._games[-1]
-            self._view.tableView.setModel(self._sort_proxy_model)
-            
-            self.set_current_game_label()
-            self.set_enabled_of_previous_pushbutton()
-            self.set_enabled_of_next_pushbutton()
 
     def initialize(self) -> None:
         self._games = self._model.get_all_games()
@@ -115,33 +102,6 @@ class MainWindowController:
             self._currentGame.id
             )
         
-        self._view.paysum_lineedit.setText(f"{sum_of_game.penalty_sum:.2f} €")
-
-    async def fill_form_async(self):
-        table_model = self._penalty_tablemodel
-        table_model.remove_all_rows()
-        sum_per_players = await self._model.get_all_sum_per_player_async(
-                self._currentGame.id
-            )
-        insert_index = table_model.createIndex(0, 0, QModelIndex())
-        table_model.insertRows(
-            insert_index, 
-            rows=sum_per_players, 
-            parent=QModelIndex()
-            )
-
-        game_stats = await self._model.get_results_per_game_async(
-            self._currentGame.id
-            )
-        self._view.teamresult_lineedit.setText(str(game_stats.totalResult))
-        self._view.teamerrors_lineEdit.setText(str(game_stats.totalErrors))
-        self._view.full_lineEdit.setText(str(game_stats.totalFull))
-        self._view.clear_lineEdit.setText(str(game_stats.totalClear))
-        self._view.tableView.resizeColumnsToContents()
-
-        sum_of_game = await self._model.get_sum_per_game_async(
-            self._currentGame.id
-            )
         self._view.paysum_lineedit.setText(f"{sum_of_game.penalty_sum:.2f} €")
 
     def previous_button_clicked(self):
@@ -204,11 +164,7 @@ class MainWindowController:
         dialog_result = dialog_controller.show_dialog()
 
         if dialog_result:
-            self._model.update_game_player(game_player)
-
-            for player_penalty in player_penalties:
-                self._model.update_player_penalty(player_penalty)
-
+            self._model.update_game_player_with_penalties(game_player, player_penalties)
             self.fill_form()
             
 

@@ -41,27 +41,12 @@ class MainWindowModel:
     
     def get_all_games(self):
         return self._game_table.get_all()
-    
-    async def get_all_games_async(self):
-        return await self._game_table.get_all_async()
 
     def get_results_per_game(self, game_id: int):
         return self._result_of_game_view.get_by_game_id(game_id)
     
-    async def get_results_per_game_async(self, game_id: int):
-        return await self._result_of_game_view.get_by_game_id_async(
-            game_id
-        )
-    
     def get_all_sum_per_player(self, game_id: int) -> list[SumPerPlayer]:
         return self._sum_per_player_view.get_by_game_id(game_id)
-    
-    async def get_all_sum_per_player_async(
-                                            self, game_id: int
-            ) -> list[SumPerPlayer]:
-        return await self._sum_per_player_view.get_by_game_id_async(
-            game_id
-        )
         
     def get_by_game_and_player_id(
         self,
@@ -73,55 +58,33 @@ class MainWindowModel:
             player_id
         )
         
-    async def get_by_game_and_player_id_async(
-        self,
-        game_id: int,
-        player_id: int
-    ) -> Union[GamePlayers, None]:
-        return await self._game_player_table.get_by_game_and_player_id_async(
-            game_id,
-            player_id
-        )
-        
     def get_sum_per_game(self, game_id: int):
         return self._sum_per_game_view.get_by_game_id(game_id)
-    
-    async def get_sum_per_game_async(self, game_id: int):
-        return await self._sum_per_game_view.get_by_game_id_async(
-            game_id
-        )
         
     def get_penalty(self, penalty_id: int):
         return self._penalty_table.get_by_id(penalty_id)
-    
-    async def get_penalty_async(self, penalty_id: int):
-        return await self._penalty_table.get_by_id_async(penalty_id)
     
     def get_penalty_by_gameplayerid(
                                     self, game_player_id: int
             ) -> list[PlayerPenalties]:
         return self._player_penalty_table.get_by_gameplayerid(game_player_id)
-    
-    async def get_penalty_by_gameplayerid_async(
-                                                self, game_player_id: int
-            ) -> list[PlayerPenalties]:
-        return await self._player_penalty_table.get_by_gameplayerid_async(
-            game_player_id
-        )
         
     def update_game_player(self, game_player: GamePlayers):
         self._game_player_table.update(game_player)
         
-    async def update_game_player_async(self, game_player: GamePlayers):
-        await self._game_player_table.update_async(game_player)
-        
     def update_player_penalty(self, player_penalty: PlayerPenalties):
         self._player_penalty_table.update(player_penalty)
-
-    async def update_player_penalty_async(
-                                        self, player_penalty: PlayerPenalties
-            ):
-        await self._player_penalty_table.update_async(player_penalty)
+        
+    def update_game_player_with_penalties(
+        self,
+        game_player: GamePlayers,
+        player_penalties: list[PlayerPenalties]
+    ):
+        with self._database.transaction():
+            self.update_game_player(game_player)
+            
+            for pp in player_penalties:
+                self.update_player_penalty(pp)
 
 
 class EditPenaltyDialogModel:
@@ -159,12 +122,49 @@ class AddGameDialogModel:
         player_table = PlayerTable(self._database)
         
         all_players = player_table.get_all()
+        self._players = [PlayerTableModelItem(False, p.name, p.id) for p in all_players]
         
-        for player in all_players:
-            item = PlayerTableModelItem(False, player.name)
-            self._players.append(item)
+    def save_game(self):
+        with self._database.transaction():
+            game_table = GameTable(self._database)
+            new_game_id = game_table.insert(
+                1,
+                self.game_date,
+                self.opponent,
+                self.game_day)
+
+            game_players = [GamePlayers(
+                None,
+                new_game_id,
+                p.player_id,
+                0,
+                0,
+                0,
+                0,
+                0,
+                True,
+                None)
+                for p in self._players if p.is_playing]
             
-        
+            game_player_table = GamePlayerTable(self._database)
+            game_player_ids = [game_player_table.insert(gp) for gp in game_players]
+            
+            penalty_table = PenaltyTable(self._database)
+            penalty_ids = [penalty.id for penalty in penalty_table.get_all()]
+            player_penalty_table = PlayerPenaltiesTable(self._database)
+            
+            for game_player_id in game_player_ids:
+                player_penalties = [PlayerPenalties(
+                    None,
+                    game_player_id,
+                    pid,
+                    0,
+                    None)
+                    for pid in penalty_ids]                
+  
+                [player_penalty_table.insert(pp) for pp in player_penalties]
+
+
 T = TypeVar('T')
 
 
@@ -243,7 +243,7 @@ class SumPerPlayerTablemodel(TableModel[SumPerPlayer]):
             role == Qt.ItemDataRole.CheckStateRole
             and index.column() == self.PLAYED_COLUMN_INDEX
         ):
-            return bool(player.played)
+            return Qt.CheckState.Checked if True else Qt.CheckState.Unchecked
 
         return None
 
@@ -348,13 +348,9 @@ class PlayerPenaltiesTableModel(TableModel[PlayerPenalties]):
         return flags
 
     def get_rowindex_of_error_row(self) -> int:
-        row_index: int = 0
-
-        for row in self._source:
+        for index, row in enumerate(self._source):
             if row.penalty_navigation.get_value_by_parent:
-                return row_index
-
-            row_index += 1
+                return index
 
         return -1
 
@@ -363,6 +359,7 @@ class PlayerPenaltiesTableModel(TableModel[PlayerPenalties]):
 class PlayerTableModelItem():
     is_playing: bool
     player_name: str
+    player_id: int
 
 
 class PlayerTableModel(TableModel[PlayerTableModelItem]):
@@ -408,17 +405,11 @@ class PlayerTableModel(TableModel[PlayerTableModelItem]):
         return None
     
     def setData(self, index, value, role=...):
-        if not index.isValid():
+        if not index.isValid() or index.column() != 0:
             return False
         
-        row_index = index.row()
-        if row_index < 0 or row_index >= len(self._source):
-            return False
-        
-        row = self._source[row_index]
-        column_index = index.column()
-        
-        if role in [Qt.ItemDataRole.CheckStateRole, Qt.ItemDataRole.DisplayRole] and column_index == 0:
+        if role in [Qt.ItemDataRole.CheckStateRole, Qt.ItemDataRole.DisplayRole]:
+            row = self._source[index.row()]
             row.is_playing = (value == Qt.CheckState.Checked.value)
             self.dataChanged.emit(index, index, [role])
             return True
@@ -426,7 +417,7 @@ class PlayerTableModel(TableModel[PlayerTableModelItem]):
         return False
     
     def flags(self, index: QModelIndex):
-        flags = super().flags(index) | Qt.ItemFlag.ItemIsEnabled
+        flags = super().flags(index)
         
         if index.column() == 0:
             flags = flags | Qt.ItemFlag.ItemIsUserCheckable
