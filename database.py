@@ -19,11 +19,11 @@ class Database:
         cursor = self._connection.cursor()
         return cursor.execute(sql, params).fetchone()
 
-    def execute_command(self, sql: str, params: tuple = ()):
+    def execute_command(self, sql: str, params: tuple = ()) -> int:
         cursor = self._connection.cursor()
         cursor.execute(sql, params)
         return cursor.lastrowid
-          
+
     @contextmanager
     def transaction(self):
         try:

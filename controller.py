@@ -10,8 +10,8 @@ from model import (
     PlayerPenaltiesTableModel,
     SumPerPlayerTablemodel,
     AddGameDialogModel,
-    PlayerTableModel
-    
+    PlayerTableModel,
+    SeasonListModel
 )
 from entities import Game
 from typing import TypeVar, Generic
@@ -166,7 +166,7 @@ class MainWindowController:
         if dialog_result:
             self._model.update_game_player_with_penalties(game_player, player_penalties)
             self.fill_form()
-            
+
 
 TModel = TypeVar('TModel')
 
@@ -262,6 +262,7 @@ class AddGameDialogController(DialogController[AddGameDialogModel]):
         self._view.dateEdit.setDate(self.model.game_date)
         self._view.dateEdit.dateChanged.connect(self.date_changed)
         self._view.opponentLineEdit.textChanged.connect(self.set_opponent)
+        self._view.seasonComboBox.currentIndexChanged.connect(self.set_season_id)
         
         self._is_opponent_valid = False
                
@@ -269,11 +270,17 @@ class AddGameDialogController(DialogController[AddGameDialogModel]):
         self._view.playerTtableView.verticalHeader().setVisible(False)
         self._view.playerTtableView.setModel(self._table_model)
                 
-        self.model.load_players()
+        self.model.load()  
         insert_index = self._table_model.createIndex(0, 0, QModelIndex())
         self._table_model.insertRows(insert_index, self.model.players, QModelIndex())
         self._view.playerTtableView.resizeColumnsToContents()
+        
+        self._view.seasonComboBox.setModel(SeasonListModel(self.model.seasons))
         self.update_save_button()
+    
+    def set_season_id(self):
+        season_id = self._view.seasonComboBox.currentData(Qt.ItemDataRole.UserRole)
+        self.model.selected_season = season_id
     
     def date_changed(self, new_date):
         self.model.current_date = new_date

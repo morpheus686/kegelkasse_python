@@ -1,24 +1,24 @@
 # -*- coding: utf-8 -*-
 
 ################################################################################
-## Form generated from reading UI file 'addGameDialogView.ui'
+## Form generated from reading UI file 'addGameDialogViewPvTqgx.ui'
 ##
-## Created by: Qt User Interface Compiler version 6.7.0
+## Created by: Qt User Interface Compiler version 6.9.2
 ##
 ## WARNING! All changes made in this file will be lost when recompiling UI file!
 ################################################################################
 
 from PySide6.QtCore import (QCoreApplication, QDate, QDateTime, QLocale,
     QMetaObject, QObject, QPoint, QRect,
-    QSize, QTime, QUrl, Qt, QRegularExpression)
+    QSize, QTime, QUrl, Qt)
 from PySide6.QtGui import (QBrush, QColor, QConicalGradient, QCursor,
     QFont, QFontDatabase, QGradient, QIcon,
     QImage, QKeySequence, QLinearGradient, QPainter,
-    QPalette, QPixmap, QRadialGradient, QTransform, QRegularExpressionValidator)
-from PySide6.QtWidgets import (QAbstractButton, QApplication, QDateEdit, QDialog,
-    QDialogButtonBox, QGridLayout, QHeaderView, QLabel,
-    QLineEdit, QSizePolicy, QSpacerItem, QSpinBox,
-    QTableView, QWidget)
+    QPalette, QPixmap, QRadialGradient, QTransform)
+from PySide6.QtWidgets import (QAbstractButton, QApplication, QComboBox, QDateEdit,
+    QDialog, QDialogButtonBox, QGridLayout, QHeaderView,
+    QLabel, QLineEdit, QSizePolicy, QSpacerItem,
+    QSpinBox, QTableView, QWidget)
 
 class Ui_Dialog(object):
     def setupUi(self, Dialog):
@@ -37,19 +37,15 @@ class Ui_Dialog(object):
 
         self.gridLayout_3 = QGridLayout()
         self.gridLayout_3.setObjectName(u"gridLayout_3")
+        self.dateEdit = QDateEdit(Dialog)
+        self.dateEdit.setObjectName(u"dateEdit")
+
+        self.gridLayout_3.addWidget(self.dateEdit, 0, 1, 1, 1)
+
         self.opponentLineEdit = QLineEdit(Dialog)
         self.opponentLineEdit.setObjectName(u"opponentLineEdit")
 
         self.gridLayout_3.addWidget(self.opponentLineEdit, 1, 1, 1, 1)
-
-        self.verticalSpacer = QSpacerItem(20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
-
-        self.gridLayout_3.addItem(self.verticalSpacer, 3, 0, 1, 1)
-
-        self.label_5 = QLabel(Dialog)
-        self.label_5.setObjectName(u"label_5")
-
-        self.gridLayout_3.addWidget(self.label_5, 0, 0, 1, 1)
 
         self.label_3 = QLabel(Dialog)
         self.label_3.setObjectName(u"label_3")
@@ -59,24 +55,38 @@ class Ui_Dialog(object):
         self.label_2 = QLabel(Dialog)
         self.label_2.setObjectName(u"label_2")
 
-        self.gridLayout_3.addWidget(self.label_2, 2, 0, 1, 1)
+        self.gridLayout_3.addWidget(self.label_2, 3, 0, 1, 1)
 
-        self.dateEdit = QDateEdit(Dialog)
-        self.dateEdit.setObjectName(u"dateEdit")
+        self.verticalSpacer = QSpacerItem(20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
 
-        self.gridLayout_3.addWidget(self.dateEdit, 0, 1, 1, 1)
+        self.gridLayout_3.addItem(self.verticalSpacer, 4, 0, 1, 1)
 
         self.daySpinBox = QSpinBox(Dialog)
         self.daySpinBox.setObjectName(u"daySpinBox")
-        self.daySpinBox.setRange(1, 24)
 
-        self.gridLayout_3.addWidget(self.daySpinBox, 2, 1, 1, 1)
+        self.gridLayout_3.addWidget(self.daySpinBox, 3, 1, 1, 1)
+
+        self.label_5 = QLabel(Dialog)
+        self.label_5.setObjectName(u"label_5")
+
+        self.gridLayout_3.addWidget(self.label_5, 0, 0, 1, 1)
+
+        self.seasonComboBox = QComboBox(Dialog)
+        self.seasonComboBox.setObjectName(u"seasonComboBox")
+
+        self.gridLayout_3.addWidget(self.seasonComboBox, 2, 1, 1, 1)
+
+        self.seasonLabel = QLabel(Dialog)
+        self.seasonLabel.setObjectName(u"seasonLabel")
+
+        self.gridLayout_3.addWidget(self.seasonLabel, 2, 0, 1, 1)
 
 
         self.gridLayout.addLayout(self.gridLayout_3, 1, 0, 1, 1)
 
         self.playerTtableView = QTableView(Dialog)
         self.playerTtableView.setObjectName(u"playerTtableView")
+        self.playerTtableView.verticalHeader().setVisible(False)
 
         self.gridLayout.addWidget(self.playerTtableView, 1, 1, 1, 1)
 
@@ -108,8 +118,10 @@ class Ui_Dialog(object):
     def retranslateUi(self, Dialog):
         Dialog.setWindowTitle(QCoreApplication.translate("Dialog", u"Spieltag anlegen", None))
         self.label.setText(QCoreApplication.translate("Dialog", u"Spiel", None))
-        self.label_5.setText(QCoreApplication.translate("Dialog", u"Datum", None))
         self.label_3.setText(QCoreApplication.translate("Dialog", u"Gegner", None))
         self.label_2.setText(QCoreApplication.translate("Dialog", u"Spieltag", None))
+        self.label_5.setText(QCoreApplication.translate("Dialog", u"Datum", None))
+        self.seasonLabel.setText(QCoreApplication.translate("Dialog", u"Saison", None))
         self.playerHeader.setText(QCoreApplication.translate("Dialog", u"Spieler f\u00fcr das Spiel", None))
     # retranslateUi
+

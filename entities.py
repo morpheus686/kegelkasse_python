@@ -2,6 +2,12 @@ from dataclasses import dataclass
 
 
 @dataclass
+class Season:
+    id: int
+    name: str
+
+
+@dataclass
 class DefaultTeamPlayer:
     id: int
     player: int
@@ -15,6 +21,7 @@ class Game:
     date: str
     vs: str
     gameday: int
+    season_id: int
 
 
 @dataclass

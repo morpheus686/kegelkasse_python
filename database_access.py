@@ -8,7 +8,8 @@ from entities import (
     PlayerPenalties,
     Team,
     TeamPenalties,
-    Player
+    Player,
+    Season
 )
 from database import Database
 from view_data_classes import (
@@ -42,6 +43,13 @@ class AbstractDatabaseObject(abc.ABC, Generic[T]):
         self._database.rollback()
 
 
+class SeasonTable(AbstractDatabaseObject[Season]):
+    def __init__(self, database_connection):
+        super().__init__(database_connection)
+        self._table_name = "Seasons"
+        self._mapper = lambda row: Season(*row)
+
+
 class DefaultTeamPlayerTable(AbstractDatabaseObject[DefaultTeamPlayer]):
     def __init__(self, database_connection,):
         super().__init__(database_connection)
@@ -55,11 +63,11 @@ class GameTable(AbstractDatabaseObject[Game]):
         self._table_name = "Game"
         self._mapper = lambda row: Game(*row)
         
-    def insert(self, team_id: int, game_date: str, opponent: str, game_day: int) -> int:
+    def insert(self, team_id: int, game_date: str, opponent: str, game_day: int, season_id: int) -> int:
         query = f"""INSERT INTO {self._table_name} 
-                   (Team, Date, Vs, GameDay)
-                   VALUES (?, ?, ?, ?)"""
-        params = (team_id, game_date, opponent, game_day)
+                   (Team, Date, Vs, GameDay, SeasonId)
+                   VALUES (?, ?, ?, ?, ?)"""
+        params = (team_id, game_date, opponent, game_day, season_id)
         new_id = self._database.execute_command(query, params)
         return new_id
 
@@ -126,7 +134,7 @@ class PenaltyTable(AbstractDatabaseObject[Penalty]):
         r = self._database.execute_single_query(query, params)
 
         return self._mapper(r)
-        
+
 
 class PlayerPenaltiesTable(AbstractDatabaseObject[PlayerPenalties]):
     def __init__(self, database_connection):

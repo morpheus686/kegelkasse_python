@@ -3,6 +3,7 @@ from PySide6.QtCore import (
     QAbstractTableModel,
     QModelIndex,
     QPersistentModelIndex,
+    QAbstractListModel
 )
 from PySide6.QtGui import Qt
 from database import Database
@@ -14,12 +15,14 @@ from database_access import (
     GameTable,
     ResultOfGameView,
     SumPerGameView,
-    PlayerTable
+    PlayerTable,
+    SeasonTable
 )
-from entities import PlayerPenalties, GamePlayers
+from entities import PlayerPenalties, GamePlayers, Season
 from view_data_classes import SumPerPlayer
 from dataclasses import dataclass
 from datetime import date
+from abc import abstractmethod
 
 
 class MainWindowModel:
@@ -111,18 +114,26 @@ class AddGameDialogModel:
         self.game_date = date.today()
         self.opponent = ""
         self.game_day = 1
+        self.selected_season = 0
         
         self._players = []
+        self._seasons = []
         
     @property
     def players(self):
         return self._players
     
-    def load_players(self) -> None:
+    @property
+    def seasons(self):
+        return self._seasons
+    
+    def load(self) -> None:
         player_table = PlayerTable(self._database)
-        
         all_players = player_table.get_all()
         self._players = [PlayerTableModelItem(False, p.name, p.id) for p in all_players]
+        
+        season_table = SeasonTable(self._database)
+        self._seasons = season_table.get_all()
         
     def save_game(self):
         with self._database.transaction():
@@ -131,7 +142,8 @@ class AddGameDialogModel:
                 1,
                 self.game_date,
                 self.opponent,
-                self.game_day)
+                self.game_day,
+                self.selected_season)
 
             game_players = [GamePlayers(
                 None,
@@ -168,7 +180,48 @@ class AddGameDialogModel:
 T = TypeVar('T')
 
 
-class TableModel(QAbstractTableModel, Generic[T]):
+class ListModel(QAbstractListModel, Generic[T]):
+    def __init__(self, items=None, parent=...):
+        super().__init__(parent)
+        self._items: list[T] = items or []
+        
+    def data(self, index: QModelIndex, role: int = ...) -> Any:
+        if not index.isValid():
+            return None
+        
+        item = self._items[index.row()]
+        
+        if role == Qt.ItemDataRole.DisplayRole:
+            return self.get_label(item)
+        elif role == Qt.ItemDataRole.UserRole:
+            return self.get_id(item)
+        
+        return None
+        
+    def rowCount(self, parent=QModelIndex()) -> int:
+        return len(self._items)
+    
+    @abstractmethod
+    def get_label(self, item: T) -> str:
+        pass
+    
+    @abstractmethod
+    def get_id(self, item: T) -> int:
+        pass
+
+
+class SeasonListModel(ListModel[Season]):
+    def __init__(self, items: list[Season] = None, parent=None):
+        super().__init__(items, parent)
+    
+    def get_label(self, item: Season) -> str:
+        return item.name
+    
+    def get_id(self, item: Season) -> int:
+        return item.id
+
+
+class AbstractTableModel(QAbstractTableModel, Generic[T]):
     def __init__(self):
         super().__init__()
         self._source: list[T] = []
@@ -205,9 +258,9 @@ class TableModel(QAbstractTableModel, Generic[T]):
 
     def rowCount(self, parent=QModelIndex()) -> int:
         return len(self._source)
+  
 
-
-class SumPerPlayerTablemodel(TableModel[SumPerPlayer]):
+class SumPerPlayerTablemodel(AbstractTableModel[SumPerPlayer]):
     PLAYED_COLUMN_INDEX = 5
 
     def columnCount(self, parent=QModelIndex()) -> int:
@@ -284,7 +337,7 @@ class SumPerPlayerTablemodel(TableModel[SumPerPlayer]):
         return flags
 
 
-class PlayerPenaltiesTableModel(TableModel[PlayerPenalties]):
+class PlayerPenaltiesTableModel(AbstractTableModel[PlayerPenalties]):
     EDITABLE_COLUMN = 1
 
     def columnCount(self, parent=...):
@@ -362,7 +415,7 @@ class PlayerTableModelItem():
     player_id: int
 
 
-class PlayerTableModel(TableModel[PlayerTableModelItem]):
+class PlayerTableModel(AbstractTableModel[PlayerTableModelItem]):
     def headerData(
         self,
         section: int,

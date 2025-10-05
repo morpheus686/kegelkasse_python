@@ -6,8 +6,8 @@ from model import MainWindowModel
 from qasync import QEventLoop
 
 if __name__ == '__main__':
-    app = QApplication(sys.argv)    
-    loop = QEventLoop(app)    
+    app = QApplication(sys.argv)
+    loop = QEventLoop(app)   
     model = MainWindowModel('Kegelkasse.db')
     window = main_window.MainWindow(model)
     window.show()
